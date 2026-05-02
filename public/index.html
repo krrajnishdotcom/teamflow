@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="TeamFlow - Team Collaboration Tool built on Google Cloud"/>
+<meta name="theme-color" content="#1D9E75"/>
+<title>TeamFlow – Team Collaboration Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset & tokens ─────────────────────────────────────────── */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#1D9E75;--brand-dark:#0F6E56;--brand-light:#E1F5EE;
+    --bg:#F6F8F7;--surface:#FFFFFF;--surface2:#F1F4F3;
+    --border:#E2E8E5;--border2:#C8D6D0;
+    --text:#1A2420;--text2:#4A6860;--text3:#8FA89F;
+    --blue:#185FA5;--blue-bg:#E6F1FB;
+    --amber:#854F0B;--amber-bg:#FAEEDA;
+    --red:#A32D2D;--red-bg:#FCEBEB;
+    --purple:#534AB7;--purple-bg:#EEEDFE;
+    --green:#3B6D11;--green-bg:#EAF3DE;
+    --radius:10px;--radius-lg:16px;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --shadow-lg:0 4px 16px rgba(0,0,0,.08);
+    --font:'DM Sans',system-ui,sans-serif;
+    --mono:'DM Mono',monospace;
+  }
+  html{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+  button{font-family:var(--font);cursor:pointer}
+  input,select,textarea{font-family:var(--font)}
+  a{color:var(--brand)}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  /* ── Skip link (accessibility) ──────────────────────────────── */
+  .skip-link{position:absolute;top:-40px;left:0;background:var(--brand);color:#fff;padding:8px 16px;border-radius:0 0 var(--radius) 0;font-size:14px;z-index:100;transition:top .2s}
+  .skip-link:focus{top:0}
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  .app{display:grid;grid-template-rows:auto auto 1fr;min-height:100vh}
+
+  /* ── Top bar ─────────────────────────────────────────────────── */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:50}
+  .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:var(--text)}
+  .logo-icon{width:32px;height:32px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .logo-icon svg{fill:#fff}
+  .badge{background:var(--brand-light);color:var(--brand-dark);font-size:11px;font-weight:500;padding:2px 10px;border-radius:20px}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .online-indicator{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+  .avatars{display:flex}
+  .avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-left:-6px}
+  .avatar:first-child{margin-left:0}
+  .av-g{background:var(--brand-light);color:var(--brand-dark)}
+  .av-b{background:var(--blue-bg);color:var(--blue)}
+  .av-r{background:var(--red-bg);color:var(--red)}
+  .av-p{background:var(--purple-bg);color:var(--purple)}
+
+  /* ── Tabs ─────────────────────────────────────────────────────── */
+  .tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px}
+  .tab{padding:10px 16px;font-size:14px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color .15s,border-color .15s}
+  .tab:hover{color:var(--text)}
+  .tab[aria-selected="true"]{color:var(--brand);border-bottom-color:var(--brand)}
+
+  /* ── Main content ────────────────────────────────────────────── */
+  .main{padding:20px 24px;overflow-y:auto}
+
+  /* ── Metric cards ────────────────────────────────────────────── */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
+  .metric-val{font-size:26px;font-weight:600;color:var(--text)}
+  .metric-val.green{color:var(--brand)}
+  .metric-val.blue{color:var(--blue)}
+  .metric-label{font-size:12px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+  .metric-bar{height:3px;background:var(--surface2);border-radius:2px;margin-top:10px;overflow:hidden}
+  .metric-bar-fill{height:100%;background:var(--brand);border-radius:2px;transition:width .5s}
+
+  /* ── Board ───────────────────────────────────────────────────── */
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .col{background:var(--surface2);border-radius:var(--radius-lg);padding:12px}
+  .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+  .col-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+  .col-count{background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:500;color:var(--text2);padding:1px 8px}
+  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s;box-shadow:var(--shadow)}
+  .task-card:hover{border-color:var(--brand);box-shadow:var(--shadow-lg)}
+  .task-card:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .task-card:last-child{margin-bottom:0}
+  .task-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.4}
+  .task-footer{display:flex;align-items:center;justify-content:space-between}
+  .tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px}
+  .tag-design{background:var(--blue-bg);color:var(--blue)}
+  .tag-backend{background:var(--amber-bg);color:var(--amber)}
+  .tag-frontend{background:var(--purple-bg);color:var(--purple)}
+  .tag-bug{background:var(--red-bg);color:var(--red)}
+  .tag-feature{background:var(--green-bg);color:var(--green)}
+  .task-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600}
+  .move-hint{font-size:10px;color:var(--text3);margin-top:6px;display:none}
+  .task-card:hover .move-hint{display:block}
+  .priority-dot{width:6px;height:6px;border-radius:50%;margin-right:4px;display:inline-block}
+  .p-high{background:#E24B4A}.p-medium{background:#EF9F27}.p-low{background:#97C459}
+
+  /* ── Add task btn ────────────────────────────────────────────── */
+  .board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .btn-add{background:var(--brand);color:#fff;border:none;border-radius:var(--radius);padding:8px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:background .15s}
+  .btn-add:hover{background:var(--brand-dark)}
+  .btn-add:focus-visible{outline-color:var(--brand-dark)}
+
+  /* ── Chat ────────────────────────────────────────────────────── */
+  .chat-wrap{display:grid;grid-template-rows:1fr auto;height:calc(100vh - 200px);max-height:520px;gap:12px}
+  .messages{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+  .msg-row{display:flex;gap:10px;align-items:flex-start}
+  .msg-row.mine{flex-direction:row-reverse}
+  .msg-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+  .msg-body{max-width:70%}
+  .msg-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+  .msg-name{font-size:12px;font-weight:600;color:var(--text)}
+  .msg-time{font-size:11px;color:var(--text3)}
+  .msg-row.mine .msg-meta{flex-direction:row-reverse}
+  .msg-text{font-size:13px;background:var(--surface2);border-radius:0 12px 12px 12px;padding:8px 12px;color:var(--text);line-height:1.5}
+  .msg-row.mine .msg-text{background:var(--brand-light);color:var(--brand-dark);border-radius:12px 0 12px 12px}
+  .chat-input-row{display:flex;gap:8px}
+  .chat-input{flex:1;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:14px;background:var(--surface);color:var(--text);transition:border-color .15s}
+  .chat-input:focus{outline:none;border-color:var(--brand)}
+  .btn-send{background:var(--brand);color:#fff;border:none;border-radius:var(--radius);padding:10px 18px;font-size:14px;font-weight:500;transition:background .15s}
+  .btn-send:hover{background:var(--brand-dark)}
+
+  /* ── Activity tab ────────────────────────────────────────────── */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow)}
+  .panel-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+  .act-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+  .act-item:last-child{border-bottom:none}
+  .act-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .act-text{font-size:13px;color:var(--text);line-height:1.4}
+  .act-time{font-size:11px;color:var(--text3);margin-top:2px}
+  .member-row{margin-bottom:14px}
+  .member-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+  .member-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px}
+  .member-stat{font-size:12px;color:var(--text3)}
+  .bar{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--brand);border-radius:3px;transition:width .5s}
+
+  /* ── Modal ───────────────────────────────────────────────────── */
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+  .modal-backdrop.open{display:flex}
+  .modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:380px;max-width:90vw;box-shadow:var(--shadow-lg)}
+  .modal h2{font-size:16px;font-weight:600;margin-bottom:16px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+  .field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brand)}
+  .field textarea{height:72px;resize:vertical}
+  .modal-btns{display:flex;gap:8px;margin-top:16px}
+  .btn-cancel{flex:1;border:1px solid var(--border);background:none;border-radius:var(--radius);padding:9px;font-size:14px;color:var(--text2)}
+  .btn-cancel:hover{background:var(--surface2)}
+  .btn-save{flex:1;background:var(--brand);border:none;border-radius:var(--radius);padding:9px;font-size:14px;font-weight:500;color:#fff}
+  .btn-save:hover{background:var(--brand-dark)}
+
+  /* ── Section heading ─────────────────────────────────────────── */
+  .section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+
+  /* ── Google badge ────────────────────────────────────────────── */
+  .powered-by{position:fixed;bottom:14px;right:18px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;box-shadow:var(--shadow)}
+
+  /* ── Responsive ───────────────────────────────────────────────── */
+  @media(max-width:700px){
+    .metrics{grid-template-columns:repeat(2,1fr)}
+    .board{grid-template-columns:1fr}
+    .two-col{grid-template-columns:1fr}
+    .topbar{padding:0 14px}
+    .main{padding:14px}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="app" role="application" aria-label="TeamFlow Collaboration Tool">
+
+  <!-- Top bar -->
+  <header class="topbar" role="banner">
+    <div class="logo">
+      <div class="logo-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+      </div>
+      TeamFlow
+      <span class="badge">Chennai Hackathon</span>
+    </div>
+    <div class="topbar-right">
+      <div class="online-indicator" aria-label="4 team members online">
+        <div class="dot" aria-hidden="true"></div>
+        <span>4 online</span>
+      </div>
+      <div class="avatars" aria-label="Team members">
+        <div class="avatar av-g" title="Karthik A" aria-label="Karthik A">KA</div>
+        <div class="avatar av-b" title="Nisha P" aria-label="Nisha P">NP</div>
+        <div class="avatar av-r" title="Rajan S" aria-label="Rajan S">RS</div>
+        <div class="avatar av-p" title="Meera M" aria-label="Meera M">MM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs" role="tablist" aria-label="Main navigation">
+    <button class="tab" role="tab" aria-selected="true"  aria-controls="panel-kanban"  id="tab-kanban"  onclick="switchTab('kanban',this)">Kanban Board</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chat"    id="tab-chat"    onclick="switchTab('chat',this)">Team Chat</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-activity" id="tab-activity" onclick="switchTab('activity',this)">Activity</button>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main" id="main-content">
+
+    <!-- Metrics row -->
+    <section class="metrics" aria-label="Project metrics">
+      <div class="metric" role="status" aria-live="polite" aria-label="Total tasks">
+        <div class="metric-val" id="m-total">—</div>
+        <div class="metric-label">Total Tasks</div>
+      </div>
+      <div class="metric" role="status" aria-live="polite" aria-label="Completed tasks">
+        <div class="metric-val green" id="m-done">—</div>
+        <div class="metric-label">Completed</div>
+      </div>
+      <div class="metric" role="status" aria-live="polite" aria-label="Tasks in progress">
+        <div class="metric-val blue" id="m-prog">—</div>
+        <div class="metric-label">In Progress</div>
+      </div>
+      <div class="metric" role="status" aria-live="polite" aria-label="Completion percentage">
+        <div class="metric-val" id="m-pct">—</div>
+        <div class="metric-label">Progress</div>
+        <div class="metric-bar" aria-hidden="true"><div class="metric-bar-fill" id="m-bar" style="width:0%"></div></div>
+      </div>
+    </section>
+
+    <!-- Kanban panel -->
+    <div id="panel-kanban" role="tabpanel" aria-labelledby="tab-kanban">
+      <div class="board-header">
+        <span class="section-title">Sprint Board</span>
+        <button class="btn-add" onclick="openModal()" aria-label="Add new task">
+          <span aria-hidden="true">+</span> Add Task
+        </button>
+      </div>
+      <div class="board" role="group" aria-label="Kanban columns">
+        <section aria-label="To Do column">
+          <div class="col">
+            <div class="col-header">
+              <span class="col-title">To Do</span>
+              <span class="col-count" id="cnt-todo" aria-live="polite">0</span>
+            </div>
+            <div id="col-todo" role="list"></div>
+          </div>
+        </section>
+        <section aria-label="In Progress column">
+          <div class="col">
+            <div class="col-header">
+              <span class="col-title">In Progress</span>
+              <span class="col-count" id="cnt-progress" aria-live="polite">0</span>
+            </div>
+            <div id="col-progress" role="list"></div>
+          </div>
+        </section>
+        <section aria-label="Done column">
+          <div class="col">
+            <div class="col-header">
+              <span class="col-title">Done</span>
+              <span class="col-count" id="cnt-done" aria-live="polite">0</span>
+            </div>
+            <div id="col-done" role="list"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Chat panel -->
+    <div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
+      <div class="chat-wrap">
+        <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Team chat messages"></div>
+        <div class="chat-input-row">
+          <label for="chat-in" class="sr-only" style="position:absolute;opacity:0">Message the team</label>
+          <input class="chat-input" id="chat-in" placeholder="Message the team…" aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMsg()"/>
+          <button class="btn-send" onclick="sendMsg()" aria-label="Send message">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity panel -->
+    <div id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" hidden>
+      <div class="two-col">
+        <div class="panel" aria-label="Recent activity">
+          <div class="panel-title">Recent Activity</div>
+          <div id="activity-list" role="log" aria-live="polite"></div>
+        </div>
+        <div class="panel" aria-label="Team member progress">
+          <div class="panel-title">Team Progress</div>
+          <div id="member-progress"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modal-title">New Task</h2>
+    <div class="field">
+      <label for="t-title">Task title *</label>
+      <input id="t-title" type="text" placeholder="What needs to be done?" maxlength="200" required/>
+    </div>
+    <div class="field">
+      <label for="t-assign">Assignee *</label>
+      <select id="t-assign">
+        <option value="Karthik A">Karthik A</option>
+        <option value="Nisha P">Nisha P</option>
+        <option value="Rajan S">Rajan S</option>
+        <option value="Meera M">Meera M</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="t-tag">Category</label>
+      <select id="t-tag">
+        <option value="design">Design</option>
+        <option value="backend">Backend</option>
+        <option value="frontend">Frontend</option>
+        <option value="bug">Bug</option>
+        <option value="feature">Feature</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="t-priority">Priority</label>
+      <select id="t-priority">
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="t-desc">Description</label>
+      <textarea id="t-desc" placeholder="Optional description…" maxlength="500"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google powered badge -->
+<div class="powered-by" aria-label="Powered by Google Cloud">
+  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+  Google Cloud Run
+</div>
+
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const members = {
+  'Karthik A':{initials:'KA',cls:'av-g'},
+  'Nisha P':{initials:'NP',cls:'av-b'},
+  'Rajan S':{initials:'RS',cls:'av-r'},
+  'Meera M':{initials:'MM',cls:'av-p'},
+};
+
+let tasks = [];
+let messages = [];
+let activities = [];
+let nextMsgId = 1;
+
+// ── API helpers ───────────────────────────────────────────────────────────────
+async function apiFetch(url, opts={}) {
+  try {
+    const res = await fetch(url, {
+      headers:{'Content-Type':'application/json'},
+      ...opts,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    return await res.json();
+  } catch(e) {
+    console.error('API error', e);
+    return null;
+  }
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [tRes, mRes] = await Promise.all([
+    apiFetch('/api/tasks'),
+    apiFetch('/api/messages'),
+  ]);
+  if (tRes?.success) tasks = tRes.data;
+  if (mRes?.success) messages = mRes.data;
+  activities = [
+    {text:'Karthik A moved "Auth flow" to In Progress', time:'10 min ago', color:'#185FA5'},
+    {text:'Nisha P completed "Brand palette"', time:'22 min ago', color:'#1D9E75'},
+    {text:'Rajan S updated API docs', time:'35 min ago', color:'#993C1D'},
+    {text:'Meera M marked kick-off deck as Done', time:'48 min ago', color:'#534AB7'},
+  ];
+  renderBoard();
+  renderChat();
+  renderActivity();
+}
+
+// ── Board ─────────────────────────────────────────────────────────────────────
+const nextStatus = {todo:'progress', progress:'done', done:'todo'};
+const nextLabel  = {todo:'In Progress', progress:'Done', done:'To Do'};
+
+function renderBoard() {
+  ['todo','progress','done'].forEach(s => {
+    const el = document.getElementById('col-'+s);
+    const col = tasks.filter(t => t.status === s);
+    document.getElementById('cnt-'+s).textContent = col.length;
+    el.innerHTML = col.map(t => {
+      const m = members[t.assignee] || {initials:t.assignee?.slice(0,2)||'?',cls:'av-g'};
+      return `<article class="task-card" role="listitem" tabindex="0"
+          aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Click to move to ${nextLabel[s]}"
+          onclick="moveTask('${t.id}')" onkeydown="if(event.key==='Enter'||event.key===' ')moveTask('${t.id}')">
+        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-footer">
+          <span class="tag tag-${t.tag}">${t.tag}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="priority-dot p-${t.priority}" aria-label="Priority: ${t.priority}"></span>
+            <div class="task-av ${m.cls}" aria-label="${esc(t.assignee)}">${m.initials}</div>
+          </div>
+        </div>
+        <div class="move-hint" aria-hidden="true">Click → move to ${nextLabel[s]}</div>
+      </article>`;
+    }).join('');
+  });
+  updateMetrics();
+}
+
+async function moveTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  const newStatus = nextStatus[task.status];
+  const res = await apiFetch(`/api/tasks/${id}`, {method:'PUT', body:{status:newStatus}});
+  if (res?.success) {
+    task.status = newStatus;
+    activities.unshift({text:`"${task.title}" moved to ${nextLabel[task.status]}`, time:'just now', color:'#1D9E75'});
+    renderBoard();
+    renderActivity();
+  }
+}
+
+function updateMetrics() {
+  const total = tasks.length;
+  const done  = tasks.filter(t => t.status === 'done').length;
+  const prog  = tasks.filter(t => t.status === 'progress').length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('m-total').textContent = total;
+  document.getElementById('m-done').textContent  = done;
+  document.getElementById('m-prog').textContent  = prog;
+  document.getElementById('m-pct').textContent   = pct + '%';
+  document.getElementById('m-bar').style.width   = pct + '%';
+}
+
+// ── Add Task ──────────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('t-title').focus();
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+async function saveTask() {
+  const title = document.getElementById('t-title').value.trim();
+  if (!title) { document.getElementById('t-title').focus(); return; }
+  const body = {
+    title,
+    assignee: document.getElementById('t-assign').value,
+    tag:      document.getElementById('t-tag').value,
+    priority: document.getElementById('t-priority').value,
+    description: document.getElementById('t-desc').value,
+  };
+  const res = await apiFetch('/api/tasks', {method:'POST', body});
+  if (res?.success) {
+    tasks.push(res.data);
+    activities.unshift({text:`New task "${title}" created`, time:'just now', color:'#1D9E75'});
+    ['t-title','t-desc'].forEach(id => document.getElementById(id).value = '');
+    closeModal();
+    renderBoard();
+    renderActivity();
+  }
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function renderChat() {
+  const el = document.getElementById('messages');
+  el.innerHTML = messages.map(m => {
+    const info = members[m.user] || {initials:m.user?.slice(0,2)||'?', cls:'av-g'};
+    const mine = m.user === 'Karthik A';
+    return `<div class="msg-row ${mine?'mine':''}" role="article" aria-label="Message from ${esc(m.user)}">
+      <div class="msg-av ${info.cls}" aria-hidden="true">${info.initials}</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-name">${esc(m.user)}</span>
+          <span class="msg-time">${formatTime(m.timestamp)}</span>
+        </div>
+        <div class="msg-text">${esc(m.text)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  const res = await apiFetch('/api/messages', {method:'POST', body:{user:'Karthik A', text}});
+  if (res?.success) {
+    messages.push(res.data);
+    activities.unshift({text:`Karthik A sent a message`, time:'just now', color:'#534AB7'});
+    inp.value = '';
+    renderChat();
+    renderActivity();
+  }
+}
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+function renderActivity() {
+  const el = document.getElementById('activity-list');
+  el.innerHTML = activities.slice(0,8).map(a =>
+    `<div class="act-item" role="listitem">
+      <div class="act-dot" style="background:${a.color}" aria-hidden="true"></div>
+      <div><div class="act-text">${esc(a.text)}</div><div class="act-time">${a.time}</div></div>
+    </div>`).join('');
+
+  const mp = document.getElementById('member-progress');
+  mp.innerHTML = Object.entries(members).map(([name, info]) => {
+    const total = tasks.filter(t => t.assignee === name).length;
+    const done  = tasks.filter(t => t.assignee === name && t.status === 'done').length;
+    const pct   = total ? Math.round(done / total * 100) : 0;
+    return `<div class="member-row">
+      <div class="member-info">
+        <span class="member-name">
+          <div class="avatar ${info.cls}" style="width:24px;height:24px;font-size:9px" aria-hidden="true">${info.initials}</div>
+          ${esc(name)}
+        </span>
+        <span class="member-stat">${done}/${total} done</span>
+      </div>
+      <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(name)} progress">
+        <div class="bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.setAttribute('aria-selected', 'false');
+  });
+  btn.setAttribute('aria-selected', 'true');
+  ['kanban','chat','activity'].forEach(n => {
+    const panel = document.getElementById('panel-'+n);
+    if (n === name) { panel.removeAttribute('hidden'); }
+    else            { panel.setAttribute('hidden',''); }
+  });
+  if (name === 'chat') renderChat();
+}
+
+// ── Keyboard: Escape closes modal ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatTime(ts) {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch { return ''; }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
