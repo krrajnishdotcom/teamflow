@@ -261,17 +261,34 @@ describe('Export API', () => {
   });
 });
 
+describe('Auth API', () => {
+  it('GET /api/auth/me returns 401 without token', async () => {
+    const res = await request(app).get('/api/auth/me');
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('GET /api/auth/me returns 401 with invalid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', 'Bearer invalid-token');
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('Security', () => {
   it('sets security headers via helmet', async () => {
     const res = await request(app).get('/health');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['x-frame-options']).toBeDefined();
+    expect(res.headers['content-security-policy']).toBeDefined();
   });
 
   it('returns 404 for unknown routes', async () => {
     const res = await request(app).get('/api/unknown-route');
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
+    expect(res.body.error).toBe('Endpoint not found');
   });
 
   it('sanitizes XSS in task title', async () => {
@@ -280,6 +297,7 @@ describe('Security', () => {
       .send({ title: '<script>alert(1)</script>', assignee: 'User', tag: 'bug', priority: 'low' });
     if (res.status === 201) {
       expect(res.body.data.title).not.toContain('<script>');
+      expect(res.body.data.title).toBe('scriptalert(1)/script');
     }
   });
 
@@ -289,6 +307,13 @@ describe('Security', () => {
       .send({ text: '<img src=x onerror=alert(1)> done' });
     if (res.status === 201) {
       expect(res.body.data.text).not.toContain('<img');
+      expect(res.body.data.text).toContain('img src=x onerror=alert(1) done');
     }
+  });
+
+  it('rate limits excessive requests', async () => {
+    // This is a soft check as full rate limit testing can be slow
+    const res = await request(app).get('/health');
+    expect(res.headers['x-ratelimit-limit']).toBeDefined();
   });
 });

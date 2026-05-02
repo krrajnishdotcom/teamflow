@@ -1609,20 +1609,22 @@
           draggable="true"
           data-task-id="${t.id}"
           data-status="${s}"
-          aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Drag or click to move.">
+          title="Move to ${nextLabel[s]}"
+          aria-roledescription="draggable task"
+          aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Click or press Enter to move to ${nextLabel[s]}.">
         <button class="btn-delete-task" data-task-id="${t.id}" title="Delete task" aria-label="Delete task">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
           </svg>
         </button>
         <div class="task-title">
-          <span class="drag-handle" aria-hidden="true">⠿</span>${esc(t.title)}
+          <span class="drag-handle" aria-hidden="true" title="Drag to move">⠿</span>${esc(t.title)}
         </div>
         <div class="task-footer">
           <span class="tag tag-${t.tag}">${t.tag}</span>
           <div style="display:flex;align-items:center;gap:8px">
             <span class="priority-dot p-${t.priority}" aria-label="Priority: ${t.priority}"></span>
-            <div class="task-av ${m.cls}" aria-label="${esc(t.assignee)}">${m.initials}</div>
+            <div class="task-av ${m.cls}" aria-label="Assigned to ${esc(t.assignee)}">${m.initials}</div>
           </div>
         </div>
         <div class="move-hint" aria-hidden="true">Click to move → ${nextLabel[s]}</div>
