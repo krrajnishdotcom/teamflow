@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Team Collaboration Tool - Prompt Wars Chennai Hackathon. Built with Google Cloud Run, Firebase, and Vertex AI.",
   "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krrajnishdotcom/teamflow.git"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",

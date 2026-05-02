@@ -56,7 +56,7 @@ Google Cloud Run (this app)
 
 ```bash
 # Clone and install
-git clone https://github.com/YOUR_USERNAME/teamflow
+git clone https://github.com/krrajnishdotcom/teamflow.git
 cd teamflow
 npm install
 
