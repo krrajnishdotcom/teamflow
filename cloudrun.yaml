@@ -4,6 +4,7 @@ metadata:
   name: teamflow
   annotations:
     run.googleapis.com/ingress: all
+    run.googleapis.com/region: asia-south1
 spec:
   template:
     metadata:

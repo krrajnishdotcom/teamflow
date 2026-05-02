@@ -1,590 +1,1804 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="TeamFlow - Team Collaboration Tool built on Google Cloud"/>
-<meta name="theme-color" content="#1D9E75"/>
-<title>TeamFlow – Team Collaboration Tool</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<style>
-  /* ── Reset & tokens ─────────────────────────────────────────── */
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --brand:#1D9E75;--brand-dark:#0F6E56;--brand-light:#E1F5EE;
-    --bg:#F6F8F7;--surface:#FFFFFF;--surface2:#F1F4F3;
-    --border:#E2E8E5;--border2:#C8D6D0;
-    --text:#1A2420;--text2:#4A6860;--text3:#8FA89F;
-    --blue:#185FA5;--blue-bg:#E6F1FB;
-    --amber:#854F0B;--amber-bg:#FAEEDA;
-    --red:#A32D2D;--red-bg:#FCEBEB;
-    --purple:#534AB7;--purple-bg:#EEEDFE;
-    --green:#3B6D11;--green-bg:#EAF3DE;
-    --radius:10px;--radius-lg:16px;
-    --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-    --shadow-lg:0 4px 16px rgba(0,0,0,.08);
-    --font:'DM Sans',system-ui,sans-serif;
-    --mono:'DM Mono',monospace;
-  }
-  html{font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
-  button{font-family:var(--font);cursor:pointer}
-  input,select,textarea{font-family:var(--font)}
-  a{color:var(--brand)}
-  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TeamFlow - Team Collaboration Tool built on Google Cloud" />
+  <meta name="theme-color" content="#1D9E75" />
+  <title>TeamFlow – Team Collaboration Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ── Reset & tokens ─────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-  /* ── Skip link (accessibility) ──────────────────────────────── */
-  .skip-link{position:absolute;top:-40px;left:0;background:var(--brand);color:#fff;padding:8px 16px;border-radius:0 0 var(--radius) 0;font-size:14px;z-index:100;transition:top .2s}
-  .skip-link:focus{top:0}
+    :root {
+      /* Base Colors */
+      --brand: #10B981;
+      --brand-dark: #059669;
+      --brand-light: #D1FAE5;
+      --bg: #F9FAFB;
+      --surface: #FFFFFF;
+      --surface2: #F3F4F6;
+      --border: #E5E7EB;
+      --border2: #D1D5DB;
+      --text: #111827;
+      --text2: #4B5563;
+      --text3: #9CA3AF;
 
-  /* ── Layout ─────────────────────────────────────────────────── */
-  .app{display:grid;grid-template-rows:auto auto 1fr;min-height:100vh}
+      /* Accent Colors */
+      --blue: #3B82F6;
+      --blue-bg: #DBEAFE;
+      --amber: #F59E0B;
+      --amber-bg: #FEF3C7;
+      --red: #EF4444;
+      --red-bg: #FEE2E2;
+      --purple: #8B5CF6;
+      --purple-bg: #EDE9FE;
+      --green: #10B981;
+      --green-bg: #D1FAE5;
 
-  /* ── Top bar ─────────────────────────────────────────────────── */
-  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:50}
-  .logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:var(--text)}
-  .logo-icon{width:32px;height:32px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center}
-  .logo-icon svg{fill:#fff}
-  .badge{background:var(--brand-light);color:var(--brand-dark);font-size:11px;font-weight:500;padding:2px 10px;border-radius:20px}
-  .topbar-right{display:flex;align-items:center;gap:12px}
-  .online-indicator{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2)}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
-  .avatars{display:flex}
-  .avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-left:-6px}
-  .avatar:first-child{margin-left:0}
-  .av-g{background:var(--brand-light);color:var(--brand-dark)}
-  .av-b{background:var(--blue-bg);color:var(--blue)}
-  .av-r{background:var(--red-bg);color:var(--red)}
-  .av-p{background:var(--purple-bg);color:var(--purple)}
+      /* UI Tokens */
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+      --mono: 'DM Mono', monospace;
+      --glass: rgba(255, 255, 255, 0.7);
+      --glass-blur: blur(12px);
+    }
 
-  /* ── Tabs ─────────────────────────────────────────────────────── */
-  .tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px}
-  .tab{padding:10px 16px;font-size:14px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color .15s,border-color .15s}
-  .tab:hover{color:var(--text)}
-  .tab[aria-selected="true"]{color:var(--brand);border-bottom-color:var(--brand)}
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F172A;
+        --surface: #1E293B;
+        --surface2: #334155;
+        --border: #334155;
+        --border2: #475569;
+        --text: #F8FAFC;
+        --text2: #94A3B8;
+        --text3: #64748B;
+        --brand-light: rgba(16, 185, 129, 0.15);
+        --blue-bg: rgba(59, 130, 246, 0.15);
+        --amber-bg: rgba(245, 158, 11, 0.15);
+        --red-bg: rgba(239, 68, 68, 0.15);
+        --purple-bg: rgba(139, 92, 246, 0.15);
+        --green-bg: rgba(16, 185, 129, 0.15);
+        --glass: rgba(15, 23, 42, 0.7);
+      }
+    }
 
-  /* ── Main content ────────────────────────────────────────────── */
-  .main{padding:20px 24px;overflow-y:auto}
+    html {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+    }
 
-  /* ── Metric cards ────────────────────────────────────────────── */
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-  .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow)}
-  .metric-val{font-size:26px;font-weight:600;color:var(--text)}
-  .metric-val.green{color:var(--brand)}
-  .metric-val.blue{color:var(--blue)}
-  .metric-label{font-size:12px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
-  .metric-bar{height:3px;background:var(--surface2);border-radius:2px;margin-top:10px;overflow:hidden}
-  .metric-bar-fill{height:100%;background:var(--brand);border-radius:2px;transition:width .5s}
+    button {
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-  /* ── Board ───────────────────────────────────────────────────── */
-  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  .col{background:var(--surface2);border-radius:var(--radius-lg);padding:12px;transition:background .2s,box-shadow .2s}
-  .col.drag-over{background:var(--brand-light);box-shadow:0 0 0 2px var(--brand);}
-  .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
-  .col-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
-  .col-count{background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:500;color:var(--text2);padding:1px 8px}
-  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:grab;transition:border-color .15s,box-shadow .15s,opacity .15s,transform .15s;box-shadow:var(--shadow)}
-  .task-card:hover{border-color:var(--brand);box-shadow:var(--shadow-lg)}
-  .task-card:focus{outline:2px solid var(--brand);outline-offset:1px}
-  .task-card:last-child{margin-bottom:0}
-  .task-card.dragging{opacity:.35;transform:scale(.97);cursor:grabbing;box-shadow:none}
-  .drop-ghost{height:68px;border:2px dashed var(--brand);border-radius:var(--radius);background:var(--brand-light);margin-bottom:8px;transition:all .15s}
-  .task-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.4}
-  .task-footer{display:flex;align-items:center;justify-content:space-between}
-  .tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px}
-  .tag-design{background:var(--blue-bg);color:var(--blue)}
-  .tag-backend{background:var(--amber-bg);color:var(--amber)}
-  .tag-frontend{background:var(--purple-bg);color:var(--purple)}
-  .tag-bug{background:var(--red-bg);color:var(--red)}
-  .tag-feature{background:var(--green-bg);color:var(--green)}
-  .task-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600}
-  .drag-handle{color:var(--text3);font-size:13px;margin-right:6px;cursor:grab;letter-spacing:1px;flex-shrink:0}
-  .move-hint{font-size:10px;color:var(--text3);margin-top:6px;display:none}
-  .task-card:hover .move-hint{display:block}
-  .priority-dot{width:6px;height:6px;border-radius:50%;margin-right:4px;display:inline-block}
-  .p-high{background:#E24B4A}.p-medium{background:#EF9F27}.p-low{background:#97C459}
+    input,
+    select,
+    textarea {
+      font-family: var(--font);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-  /* ── Add task btn ────────────────────────────────────────────── */
-  .board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .btn-add{background:var(--brand);color:#fff;border:none;border-radius:var(--radius);padding:8px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:background .15s}
-  .btn-add:hover{background:var(--brand-dark)}
-  .btn-add:focus-visible{outline-color:var(--brand-dark)}
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
 
-  /* ── Chat ────────────────────────────────────────────────────── */
-  .chat-wrap{display:grid;grid-template-rows:1fr auto;height:calc(100vh - 200px);max-height:520px;gap:12px}
-  .messages{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-  .msg-row{display:flex;gap:10px;align-items:flex-start}
-  .msg-row.mine{flex-direction:row-reverse}
-  .msg-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
-  .msg-body{max-width:70%}
-  .msg-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
-  .msg-name{font-size:12px;font-weight:600;color:var(--text)}
-  .msg-time{font-size:11px;color:var(--text3)}
-  .msg-row.mine .msg-meta{flex-direction:row-reverse}
-  .msg-text{font-size:13px;background:var(--surface2);border-radius:0 12px 12px 12px;padding:8px 12px;color:var(--text);line-height:1.5}
-  .msg-row.mine .msg-text{background:var(--brand-light);color:var(--brand-dark);border-radius:12px 0 12px 12px}
-  .chat-input-row{display:flex;gap:8px}
-  .chat-input{flex:1;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:14px;background:var(--surface);color:var(--text);transition:border-color .15s}
-  .chat-input:focus{outline:none;border-color:var(--brand)}
-  .btn-send{background:var(--brand);color:#fff;border:none;border-radius:var(--radius);padding:10px 18px;font-size:14px;font-weight:500;transition:background .15s}
-  .btn-send:hover{background:var(--brand-dark)}
+    :focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px
+    }
 
-  /* ── Activity tab ────────────────────────────────────────────── */
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow)}
-  .panel-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
-  .act-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
-  .act-item:last-child{border-bottom:none}
-  .act-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-  .act-text{font-size:13px;color:var(--text);line-height:1.4}
-  .act-time{font-size:11px;color:var(--text3);margin-top:2px}
-  .member-row{margin-bottom:14px}
-  .member-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-  .member-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px}
-  .member-stat{font-size:12px;color:var(--text3)}
-  .bar{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
-  .bar-fill{height:100%;background:var(--brand);border-radius:3px;transition:width .5s}
+    /* ── Skip link (accessibility) ──────────────────────────────── */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--brand);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 0 0 var(--radius) 0;
+      font-size: 14px;
+      z-index: 100;
+      transition: top .2s
+    }
 
-  /* ── Modal ───────────────────────────────────────────────────── */
-  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
-  .modal-backdrop.open{display:flex}
-  .modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:380px;max-width:90vw;box-shadow:var(--shadow-lg)}
-  .modal h2{font-size:16px;font-weight:600;margin-bottom:16px}
-  .field{margin-bottom:12px}
-  .field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
-  .field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
-  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brand)}
-  .field textarea{height:72px;resize:vertical}
-  .modal-btns{display:flex;gap:8px;margin-top:16px}
-  .btn-cancel{flex:1;border:1px solid var(--border);background:none;border-radius:var(--radius);padding:9px;font-size:14px;color:var(--text2)}
-  .btn-cancel:hover{background:var(--surface2)}
-  .btn-save{flex:1;background:var(--brand);border:none;border-radius:var(--radius);padding:9px;font-size:14px;font-weight:500;color:#fff}
-  .btn-save:hover{background:var(--brand-dark)}
+    .skip-link:focus {
+      top: 0
+    }
 
-  /* ── Section heading ─────────────────────────────────────────── */
-  .section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-height: 100vh
+    }
 
-  /* ── Google badge ────────────────────────────────────────────── */
-  .powered-by{position:fixed;bottom:14px;right:18px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;box-shadow:var(--shadow)}
+    /* ── Top bar ─────────────────────────────────────────────────── */
+    .topbar {
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 50
+    }
 
-  /* ── Responsive ───────────────────────────────────────────────── */
-  @media(max-width:700px){
-    .metrics{grid-template-columns:repeat(2,1fr)}
-    .board{grid-template-columns:1fr}
-    .two-col{grid-template-columns:1fr}
-    .topbar{padding:0 14px}
-    .main{padding:14px}
-  }
-</style>
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .logo-icon svg {
+      fill: #fff
+    }
+
+    .badge {
+      background: var(--brand-light);
+      color: var(--brand-dark);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 20px
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .online-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      padding: 4px 12px;
+      background: var(--surface2);
+      border-radius: 20px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 4px var(--brand-light);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    .avatars {
+      display: flex;
+      margin-left: 8px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: -8px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+
+    .avatar:hover {
+      transform: translateY(-4px) scale(1.1);
+      z-index: 10;
+    }
+
+    .avatar:first-child {
+      margin-left: 0
+    }
+
+    .av-g {
+      background: var(--brand-light);
+      color: var(--brand-dark)
+    }
+
+    .av-b {
+      background: var(--blue-bg);
+      color: var(--blue)
+    }
+
+    .av-r {
+      background: var(--red-bg);
+      color: var(--red)
+    }
+
+    .av-p {
+      background: var(--purple-bg);
+      color: var(--purple)
+    }
+
+    /* ── Tabs ─────────────────────────────────────────────────────── */
+    .tabs {
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+      position: sticky;
+      top: 64px;
+      z-index: 40;
+    }
+
+    .tab {
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text2);
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .tab[aria-selected="true"] {
+      color: var(--brand);
+      border-bottom-color: var(--brand);
+    }
+
+    /* ── Main content ────────────────────────────────────────────── */
+    .main {
+      padding: 20px 24px;
+      overflow-y: auto
+    }
+
+    /* ── Metric cards ────────────────────────────────────────────── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .metric:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .metric-val {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-val.green {
+      color: var(--brand)
+    }
+
+    .metric-val.blue {
+      color: var(--blue)
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: .4px
+    }
+
+    .metric-bar {
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      background: var(--brand);
+      border-radius: 2px;
+      transition: width .5s
+    }
+
+    /* ── Board ───────────────────────────────────────────────────── */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px
+    }
+
+    .col {
+      background: var(--surface2);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      transition: all 0.3s ease;
+      min-height: 400px;
+    }
+
+    .col.drag-over {
+      background: var(--brand-light);
+      outline: 2px dashed var(--brand);
+    }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px
+    }
+
+    .col-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .col-count {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brand);
+      padding: 2px 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: grab;
+      position: relative;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .task-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .task-card:focus {
+      outline: 2px solid var(--brand);
+      outline-offset: 1px
+    }
+
+    .task-card:last-child {
+      margin-bottom: 0
+    }
+
+    .task-card.dragging {
+      opacity: .35;
+      transform: scale(.97);
+      cursor: grabbing;
+      box-shadow: none
+    }
+
+    .drop-ghost {
+      height: 68px;
+      border: 2px dashed var(--brand);
+      border-radius: var(--radius);
+      background: var(--brand-light);
+      margin-bottom: 8px;
+      transition: all .15s
+    }
+
+    .task-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .btn-delete-task {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .task-card:hover .btn-delete-task {
+      opacity: 1;
+    }
+
+    .btn-delete-task:hover {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 12px
+    }
+
+    .tag-design {
+      background: var(--blue-bg);
+      color: var(--blue)
+    }
+
+    .tag-backend {
+      background: var(--amber-bg);
+      color: var(--amber)
+    }
+
+    .tag-frontend {
+      background: var(--purple-bg);
+      color: var(--purple)
+    }
+
+    .tag-bug {
+      background: var(--red-bg);
+      color: var(--red)
+    }
+
+    .tag-feature {
+      background: var(--green-bg);
+      color: var(--green)
+    }
+
+    .task-av {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 600
+    }
+
+    .drag-handle {
+      color: var(--text3);
+      font-size: 13px;
+      margin-right: 6px;
+      cursor: grab;
+      letter-spacing: 1px;
+      flex-shrink: 0
+    }
+
+    .move-hint {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 6px;
+      display: none
+    }
+
+    .task-card:hover .move-hint {
+      display: block
+    }
+
+    .priority-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+      display: inline-block
+    }
+
+    .p-high {
+      background: #E24B4A
+    }
+
+    .p-medium {
+      background: #EF9F27
+    }
+
+    .p-low {
+      background: #97C459
+    }
+
+    /* ── Add task btn ────────────────────────────────────────────── */
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-add,
+    .btn-export {
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-add {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn-add:hover {
+      background: var(--brand-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-export {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-export:hover {
+      background: var(--surface2);
+      transform: translateY(-1px);
+    }
+
+    /* ── Chat ────────────────────────────────────────────────────── */
+    .chat-wrap {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: calc(100vh - 200px);
+      max-height: 560px;
+      gap: 12px
+    }
+
+    .chat-user-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px
+    }
+
+    .chat-user-label {
+      font-size: 12px;
+      color: var(--text3);
+      white-space: nowrap
+    }
+
+    .chat-user-select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer
+    }
+
+    .chat-user-select:focus {
+      outline: 2px solid var(--brand);
+      border-radius: 4px
+    }
+
+    .messages {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start
+    }
+
+    .msg-row.mine {
+      flex-direction: row-reverse
+    }
+
+    .msg-av {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+
+    .msg-body {
+      max-width: 75%
+    }
+
+    .msg-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px
+    }
+
+    .msg-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .msg-time {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    .msg-row.mine .msg-meta {
+      flex-direction: row-reverse
+    }
+
+    .msg-text {
+      font-size: 14px;
+      background: var(--surface2);
+      border-radius: 4px 16px 16px 16px;
+      padding: 10px 16px;
+      color: var(--text);
+      line-height: 1.5;
+      box-shadow: var(--shadow);
+    }
+
+    .msg-row.mine .msg-text {
+      background: var(--brand);
+      color: #fff;
+      border-radius: 16px 4px 16px 16px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--brand)
+    }
+
+    .btn-send {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background .15s
+    }
+
+    .btn-send:hover {
+      background: var(--brand-dark)
+    }
+
+    /* ── Activity tab ────────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow)
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 12px
+    }
+
+    .act-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .act-item:last-child {
+      border-bottom: none
+    }
+
+    .act-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0
+    }
+
+    .act-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4
+    }
+
+    .act-time {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px
+    }
+
+    .member-row {
+      margin-bottom: 14px
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px
+    }
+
+    .member-name {
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 7px
+    }
+
+    .member-stat {
+      font-size: 12px;
+      color: var(--text3)
+    }
+
+    .bar {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--brand);
+      border-radius: 3px;
+      transition: width .5s
+    }
+
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 380px;
+      max-width: 90vw;
+      box-shadow: var(--shadow-lg)
+    }
+
+    .modal h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px
+    }
+
+    .field {
+      margin-bottom: 12px
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 4px
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color .15s
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--brand)
+    }
+
+    .field textarea {
+      height: 72px;
+      resize: vertical
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px
+    }
+
+    .btn-cancel {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: none;
+      border-radius: var(--radius);
+      padding: 9px;
+      font-size: 14px;
+      color: var(--text2)
+    }
+
+    .btn-cancel:hover {
+      background: var(--surface2)
+    }
+
+    .btn-save {
+      flex: 1;
+      background: var(--brand);
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff
+    }
+
+    .btn-save:hover {
+      background: var(--brand-dark)
+    }
+
+    /* ── Section heading ─────────────────────────────────────────── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .4px
+    }
+
+    /* ── Google badge ────────────────────────────────────────────── */
+    .powered-by {
+      position: fixed;
+      bottom: 14px;
+      right: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: var(--shadow)
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media(max-width:700px) {
+      .metrics {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .board {
+        grid-template-columns: 1fr
+      }
+
+      .two-col {
+        grid-template-columns: 1fr
+      }
+
+      .topbar {
+        padding: 0 14px
+      }
+
+      .main {
+        padding: 14px
+      }
+    }
+
+    /* ── Auth UI ────────────────────────────────────────────────────────────── */
+    .btn-signin {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s
+    }
+
+    .btn-signin:hover {
+      background: var(--surface2);
+      box-shadow: var(--shadow)
+    }
+
+    .auth-user-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .auth-avatar-chip {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--blue));
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .auth-display-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .btn-signout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px 9px;
+      font-size: 11px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: background .15s
+    }
+
+    .btn-signout:hover {
+      background: var(--surface2)
+    }
+
+    /* ── AI Suggest ─────────────────────────────────────────────────────────── */
+    .assignee-lbl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px
+    }
+
+    .assignee-lbl-row label {
+      margin-bottom: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2)
+    }
+
+    .btn-ai-suggest {
+      background: linear-gradient(135deg, #4285F4 0%, #0F9D58 100%);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 3px 11px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: opacity .15s;
+      flex-shrink: 0
+    }
+
+    .btn-ai-suggest:hover {
+      opacity: .85
+    }
+
+    .btn-ai-suggest:disabled {
+      opacity: .45;
+      cursor: not-allowed
+    }
+
+    .ai-loading {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text2);
+      padding: 6px 0
+    }
+
+    .ai-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--brand);
+      animation: aiBounce .7s ease-in-out infinite
+    }
+
+    .ai-dot:nth-child(2) {
+      animation-delay: .13s
+    }
+
+    .ai-dot:nth-child(3) {
+      animation-delay: .26s
+    }
+
+    @keyframes aiBounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: .35
+      }
+
+      50% {
+        transform: translateY(-5px);
+        opacity: 1
+      }
+    }
+
+    .ai-panel {
+      background: linear-gradient(135deg, #E1F5EE 0%, #E6F1FB 100%);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 8px;
+      animation: aiFade .2s ease
+    }
+
+    @keyframes aiFade {
+      from {
+        opacity: 0;
+        transform: translateY(-4px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .ai-panel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px
+    }
+
+    .ai-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px
+    }
+
+    .ai-badge.vertex {
+      background: linear-gradient(135deg, #4285F4, #0F9D58);
+      color: #fff
+    }
+
+    .ai-badge.heuristic {
+      background: var(--amber-bg);
+      color: var(--amber)
+    }
+
+    .ai-conf {
+      font-size: 11px;
+      color: var(--text2)
+    }
+
+    .ai-assignee-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .ai-reason {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 8px
+    }
+
+    .ai-alts {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 10px
+    }
+
+    .ai-alt-chip {
+      font-size: 11px;
+      background: rgba(255, 255, 255, .75);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 2px 8px;
+      color: var(--text2)
+    }
+
+    .btn-apply-ai {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: background .15s
+    }
+
+    .btn-apply-ai:hover {
+      background: var(--brand-dark)
+    }
+  </style>
 </head>
+
 <body>
-<a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<div class="app" role="application" aria-label="TeamFlow Collaboration Tool">
+  <div class="app" role="application" aria-label="TeamFlow Collaboration Tool">
 
-  <!-- Top bar -->
-  <header class="topbar" role="banner">
-    <div class="logo">
-      <div class="logo-icon" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+    <!-- Top bar -->
+    <header class="topbar" role="banner">
+      <div class="logo">
+        <div class="logo-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path
+              d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z" />
+          </svg>
+        </div>
+        TeamFlow
+        <span class="badge">Chennai Hackathon</span>
       </div>
-      TeamFlow
-      <span class="badge">Chennai Hackathon</span>
-    </div>
-    <div class="topbar-right">
-      <div class="online-indicator" aria-label="4 team members online">
-        <div class="dot" aria-hidden="true"></div>
-        <span>4 online</span>
-      </div>
-      <div class="avatars" aria-label="Team members">
-        <div class="avatar av-g" title="Karthik A" aria-label="Karthik A">KA</div>
-        <div class="avatar av-b" title="Nisha P" aria-label="Nisha P">NP</div>
-        <div class="avatar av-r" title="Rajan S" aria-label="Rajan S">RS</div>
-        <div class="avatar av-p" title="Meera M" aria-label="Meera M">MM</div>
-      </div>
-    </div>
-  </header>
+      <div class="topbar-right">
+        <div class="online-indicator" aria-label="4 team members online">
+          <div class="dot" aria-hidden="true"></div>
+          <span>4 online</span>
+        </div>
+        <div class="avatars" aria-label="Team members">
+          <div class="avatar av-g" title="Karthik A" aria-label="Karthik A">KA</div>
+          <div class="avatar av-b" title="Nisha P" aria-label="Nisha P">NP</div>
+          <div class="avatar av-r" title="Rajan S" aria-label="Rajan S">RS</div>
+          <div class="avatar av-p" title="Meera M" aria-label="Meera M">MM</div>
+        </div>
 
-  <!-- Tabs -->
-  <nav class="tabs" role="tablist" aria-label="Main navigation">
-    <button class="tab" role="tab" aria-selected="true"  aria-controls="panel-kanban"  id="tab-kanban">Kanban Board</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chat"    id="tab-chat">Team Chat</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-activity" id="tab-activity">Activity</button>
-  </nav>
+      </div>
+    </header>
 
-  <!-- Main content -->
-  <main class="main" id="main-content">
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist" aria-label="Main navigation">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="panel-kanban" id="tab-kanban">Kanban
+        Board</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chat" id="tab-chat">Team Chat</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panel-activity"
+        id="tab-activity">Activity</button>
+    </nav>
 
-    <!-- Metrics row -->
-    <section class="metrics" aria-label="Project metrics">
-      <div class="metric" role="status" aria-live="polite" aria-label="Total tasks">
-        <div class="metric-val" id="m-total">—</div>
-        <div class="metric-label">Total Tasks</div>
-      </div>
-      <div class="metric" role="status" aria-live="polite" aria-label="Completed tasks">
-        <div class="metric-val green" id="m-done">—</div>
-        <div class="metric-label">Completed</div>
-      </div>
-      <div class="metric" role="status" aria-live="polite" aria-label="Tasks in progress">
-        <div class="metric-val blue" id="m-prog">—</div>
-        <div class="metric-label">In Progress</div>
-      </div>
-      <div class="metric" role="status" aria-live="polite" aria-label="Completion percentage">
-        <div class="metric-val" id="m-pct">—</div>
-        <div class="metric-label">Progress</div>
-        <div class="metric-bar" aria-hidden="true"><div class="metric-bar-fill" id="m-bar" style="width:0%"></div></div>
-      </div>
-    </section>
+    <!-- Main content -->
+    <main class="main" id="main-content">
 
-    <!-- Kanban panel -->
-    <div id="panel-kanban" role="tabpanel" aria-labelledby="tab-kanban">
-      <div class="board-header">
-        <span class="section-title">Sprint Board</span>
-        <button class="btn-add" id="btn-add-task" aria-label="Add new task">
-          <span aria-hidden="true">+</span> Add Task
-        </button>
-      </div>
-      <div class="board" role="group" aria-label="Kanban columns">
-        <section aria-label="To Do column">
-          <div class="col">
-            <div class="col-header">
-              <span class="col-title">To Do</span>
-              <span class="col-count" id="cnt-todo" aria-live="polite">0</span>
-            </div>
-            <div id="col-todo" role="list"></div>
+      <!-- Metrics row -->
+      <section class="metrics" aria-label="Project metrics">
+        <div class="metric" role="status" aria-live="polite" aria-label="Total tasks">
+          <div class="metric-val" id="m-total">—</div>
+          <div class="metric-label">Total Tasks</div>
+        </div>
+        <div class="metric" role="status" aria-live="polite" aria-label="Completed tasks">
+          <div class="metric-val green" id="m-done">—</div>
+          <div class="metric-label">Completed</div>
+        </div>
+        <div class="metric" role="status" aria-live="polite" aria-label="Tasks in progress">
+          <div class="metric-val blue" id="m-prog">—</div>
+          <div class="metric-label">In Progress</div>
+        </div>
+        <div class="metric" role="status" aria-live="polite" aria-label="Completion percentage">
+          <div class="metric-val" id="m-pct">—</div>
+          <div class="metric-label">Progress</div>
+          <div class="metric-bar" aria-hidden="true">
+            <div class="metric-bar-fill" id="m-bar" style="width:0%"></div>
           </div>
-        </section>
-        <section aria-label="In Progress column">
-          <div class="col">
-            <div class="col-header">
-              <span class="col-title">In Progress</span>
-              <span class="col-count" id="cnt-progress" aria-live="polite">0</span>
-            </div>
-            <div id="col-progress" role="list"></div>
-          </div>
-        </section>
-        <section aria-label="Done column">
-          <div class="col">
-            <div class="col-header">
-              <span class="col-title">Done</span>
-              <span class="col-count" id="cnt-done" aria-live="polite">0</span>
-            </div>
-            <div id="col-done" role="list"></div>
-          </div>
-        </section>
-      </div>
-    </div>
+        </div>
+      </section>
 
-    <!-- Chat panel -->
-    <div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
-      <div class="chat-wrap">
-        <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Team chat messages"></div>
-        <div class="chat-input-row">
-          <label for="chat-in" class="sr-only" style="position:absolute;opacity:0">Message the team</label>
-          <input class="chat-input" id="chat-in" placeholder="Message the team…" aria-label="Type a message"/>
-          <button class="btn-send" id="btn-send" aria-label="Send message">Send</button>
+      <!-- Kanban panel -->
+      <div id="panel-kanban" role="tabpanel" aria-labelledby="tab-kanban">
+        <div class="board-header">
+          <span class="section-title">Sprint Board</span>
+          <div class="header-actions">
+            <button class="btn-export" id="btn-export" title="Download all tasks as CSV">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Export
+            </button>
+            <button class="btn-add" id="btn-add-task" aria-label="Add new task">
+              <span aria-hidden="true">+</span> Add Task
+            </button>
+          </div>
+        </div>
+        <div class="board" role="group" aria-label="Kanban columns">
+          <section aria-label="To Do column">
+            <div class="col">
+              <div class="col-header">
+                <span class="col-title">To Do</span>
+                <span class="col-count" id="cnt-todo" aria-live="polite">0</span>
+              </div>
+              <div id="col-todo" role="list"></div>
+            </div>
+          </section>
+          <section aria-label="In Progress column">
+            <div class="col">
+              <div class="col-header">
+                <span class="col-title">In Progress</span>
+                <span class="col-count" id="cnt-progress" aria-live="polite">0</span>
+              </div>
+              <div id="col-progress" role="list"></div>
+            </div>
+          </section>
+          <section aria-label="Done column">
+            <div class="col">
+              <div class="col-header">
+                <span class="col-title">Done</span>
+                <span class="col-count" id="cnt-done" aria-live="polite">0</span>
+              </div>
+              <div id="col-done" role="list"></div>
+            </div>
+          </section>
         </div>
       </div>
-    </div>
 
-    <!-- Activity panel -->
-    <div id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" hidden>
-      <div class="two-col">
-        <div class="panel" aria-label="Recent activity">
-          <div class="panel-title">Recent Activity</div>
-          <div id="activity-list" role="log" aria-live="polite"></div>
-        </div>
-        <div class="panel" aria-label="Team member progress">
-          <div class="panel-title">Team Progress</div>
-          <div id="member-progress"></div>
+      <div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
+        <div class="chat-wrap">
+          <div class="chat-user-row" aria-label="Select your chat identity">
+            <span class="chat-user-label">Chatting as:</span>
+            <select class="chat-user-select" id="chat-user" aria-label="Select team member">
+              <option value="Karthik A">Karthik A</option>
+              <option value="Nisha P">Nisha P</option>
+              <option value="Rajan S">Rajan S</option>
+              <option value="Meera M">Meera M</option>
+            </select>
+          </div>
+          <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Team chat messages"></div>
+          <div class="chat-input-row">
+            <label for="chat-in" class="sr-only" style="position:absolute;opacity:0">Message the team</label>
+            <input class="chat-input" id="chat-in" placeholder="Message the team…" aria-label="Type a message" />
+            <button class="btn-send" id="btn-send" aria-label="Send message">Send</button>
+          </div>
         </div>
       </div>
-    </div>
 
-  </main>
-</div>
+      <!-- Activity panel -->
+      <div id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" hidden>
+        <div class="two-col">
+          <div class="panel" aria-label="Recent activity">
+            <div class="panel-title">Recent Activity</div>
+            <div id="activity-list" role="log" aria-live="polite"></div>
+          </div>
+          <div class="panel" aria-label="Team member progress">
+            <div class="panel-title">Team Progress</div>
+            <div id="member-progress"></div>
+          </div>
+        </div>
+      </div>
 
-<!-- Add Task Modal -->
-<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal">
-    <h2 id="modal-title">New Task</h2>
-    <div class="field">
-      <label for="t-title">Task title *</label>
-      <input id="t-title" type="text" placeholder="What needs to be done?" maxlength="200" required/>
-    </div>
-    <div class="field">
-      <label for="t-assign">Assignee *</label>
-      <select id="t-assign">
-        <option value="Karthik A">Karthik A</option>
-        <option value="Nisha P">Nisha P</option>
-        <option value="Rajan S">Rajan S</option>
-        <option value="Meera M">Meera M</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="t-tag">Category</label>
-      <select id="t-tag">
-        <option value="design">Design</option>
-        <option value="backend">Backend</option>
-        <option value="frontend">Frontend</option>
-        <option value="bug">Bug</option>
-        <option value="feature">Feature</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="t-priority">Priority</label>
-      <select id="t-priority">
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="t-desc">Description</label>
-      <textarea id="t-desc" placeholder="Optional description…" maxlength="500"></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" id="btn-cancel">Cancel</button>
-      <button class="btn-save" id="btn-save">Add Task</button>
+    </main>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <h2 id="modal-title">New Task</h2>
+      <div class="field">
+        <label for="t-title">Task title *</label>
+        <input id="t-title" type="text" placeholder="What needs to be done?" maxlength="200" required />
+      </div>
+      <div class="field">
+        <div class="assignee-lbl-row">
+          <label for="t-assign">Assignee *</label>
+          <button class="btn-ai-suggest" id="btn-ai-suggest" type="button" aria-label="Get AI assignee suggestion">✦ AI
+            Suggest</button>
+        </div>
+        <div class="ai-loading" id="ai-loading" hidden aria-live="polite">
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+          <div class="ai-dot"></div>
+          <span>Consulting Gemini…</span>
+        </div>
+        <select id="t-assign">
+          <option value="Karthik A">Karthik A</option>
+          <option value="Nisha P">Nisha P</option>
+          <option value="Rajan S">Rajan S</option>
+          <option value="Meera M">Meera M</option>
+        </select>
+        <div class="ai-panel" id="ai-panel" hidden aria-live="polite">
+          <div class="ai-panel-top">
+            <span class="ai-badge" id="ai-badge"></span>
+            <span class="ai-conf" id="ai-conf"></span>
+          </div>
+          <div class="ai-assignee-name" id="ai-assignee-name"></div>
+          <div class="ai-reason" id="ai-reason-text"></div>
+          <div class="ai-alts" id="ai-alts" aria-label="Alternate suggestions"></div>
+          <button class="btn-apply-ai" id="btn-apply-ai" type="button">Apply Suggestion →</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="t-tag">Category</label>
+        <select id="t-tag">
+          <option value="design">Design</option>
+          <option value="backend">Backend</option>
+          <option value="frontend">Frontend</option>
+          <option value="bug">Bug</option>
+          <option value="feature">Feature</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="t-priority">Priority</label>
+        <select id="t-priority">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="t-desc">Description</label>
+        <textarea id="t-desc" placeholder="Optional description…" maxlength="500"></textarea>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" id="btn-cancel">Cancel</button>
+        <button class="btn-save" id="btn-save">Add Task</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Google powered badge -->
-<div class="powered-by" aria-label="Powered by Google Cloud">
-  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-  Google Cloud Run
-</div>
+  <!-- Google powered badge -->
+  <div class="powered-by" aria-label="Powered by Google Cloud">
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4" />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853" />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05" />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335" />
+    </svg>
+    Google Cloud Run
+  </div>
 
-<script>
-'use strict';
+  <script>
+    'use strict';
 
-// ── State ─────────────────────────────────────────────────────────────────────
-const members = {
-  'Karthik A':{initials:'KA',cls:'av-g'},
-  'Nisha P':{initials:'NP',cls:'av-b'},
-  'Rajan S':{initials:'RS',cls:'av-r'},
-  'Meera M':{initials:'MM',cls:'av-p'},
-};
+    // ── State ─────────────────────────────────────────────────────────────────────
+    const members = {
+      'Karthik A': { initials: 'KA', cls: 'av-g' },
+      'Nisha P': { initials: 'NP', cls: 'av-b' },
+      'Rajan S': { initials: 'RS', cls: 'av-r' },
+      'Meera M': { initials: 'MM', cls: 'av-p' },
+    };
 
-let tasks = [];
-let messages = [];
-let activities = [];
-let nextMsgId = 1;
+    let tasks = [];
+    let messages = [];
+    let activities = [];
 
-// ── API helpers ───────────────────────────────────────────────────────────────
-async function apiFetch(url, opts={}) {
-  try {
-    const res = await fetch(url, {
-      headers:{'Content-Type':'application/json'},
-      ...opts,
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
-    });
-    return await res.json();
-  } catch(e) {
-    console.error('API error', e);
-    return null;
-  }
-}
+    // ── Current user (localStorage persisted) ─────────────────────────────────────
+    function getCurrentUser() {
+      return localStorage.getItem('teamflow_user') || 'Karthik A';
+    }
+    function setCurrentUser(name) {
+      localStorage.setItem('teamflow_user', name);
+    }
 
-// ── Load data ─────────────────────────────────────────────────────────────────
-async function loadAll() {
-  const [tRes, mRes] = await Promise.all([
-    apiFetch('/api/tasks'),
-    apiFetch('/api/messages'),
-  ]);
-  if (tRes?.success) tasks = tRes.data;
-  if (mRes?.success) messages = mRes.data;
-  activities = [
-    {text:'Karthik A moved "Auth flow" to In Progress', time:'10 min ago', color:'#185FA5'},
-    {text:'Nisha P completed "Brand palette"', time:'22 min ago', color:'#1D9E75'},
-    {text:'Rajan S updated API docs', time:'35 min ago', color:'#993C1D'},
-    {text:'Meera M marked kick-off deck as Done', time:'48 min ago', color:'#534AB7'},
-  ];
-  renderBoard();
-  renderChat();
-  renderActivity();
-}
+    // ── API helpers ───────────────────────────────────────────────────────────────
+    async function apiFetch(url, opts = {}) {
+      try {
+        const res = await fetch(url, {
+          headers: { 'Content-Type': 'application/json' },
+          ...opts,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+        });
+        return await res.json();
+      } catch (e) {
+        console.error('API error', e);
+        return null;
+      }
+    }
 
-// ── Board ─────────────────────────────────────────────────────────────────────
-const nextStatus = {todo:'progress', progress:'done', done:'todo'};
-const nextLabel  = {todo:'In Progress', progress:'Done', done:'To Do'};
-const colLabel   = {todo:'To Do', progress:'In Progress', done:'Done'};
+    // ── Load data ─────────────────────────────────────────────────────────────────
+    async function loadAll() {
+      const [tRes, mRes, aRes] = await Promise.all([
+        apiFetch('/api/tasks'),
+        apiFetch('/api/messages'),
+        apiFetch('/api/activities'),
+      ]);
+      if (tRes?.success) tasks = tRes.data;
+      if (mRes?.success) messages = mRes.data;
+      if (aRes?.success) activities = aRes.data;
+      renderBoard();
+      renderChat();
+      renderActivity();
+    }
 
-// Drag state
-let dragId   = null;  // id of card being dragged
-let dragFrom = null;  // source column status
+    // ── Board ─────────────────────────────────────────────────────────────────────
+    const nextStatus = { todo: 'progress', progress: 'done', done: 'todo' };
+    const nextLabel = { todo: 'In Progress', progress: 'Done', done: 'To Do' };
+    const colLabel = { todo: 'To Do', progress: 'In Progress', done: 'Done' };
 
-function renderBoard() {
-  ['todo','progress','done'].forEach(s => {
-    const el = document.getElementById('col-'+s);
-    const col = tasks.filter(t => t.status === s);
-    document.getElementById('cnt-'+s).textContent = col.length;
-    el.innerHTML = col.map(t => {
-      const m = members[t.assignee] || {initials:t.assignee?.slice(0,2)||'?',cls:'av-g'};
-      return `<article class="task-card" role="listitem" tabindex="0"
+    // Drag state
+    let dragId = null;
+    let dragFrom = null;
+
+    function renderBoard() {
+      ['todo', 'progress', 'done'].forEach(s => {
+        const el = document.getElementById('col-' + s);
+        const col = tasks.filter(t => t.status === s);
+        document.getElementById('cnt-' + s).textContent = col.length;
+        el.innerHTML = col.map(t => {
+          const m = members[t.assignee] || { initials: t.assignee?.slice(0, 2) || '?', cls: 'av-g' };
+          return `<article class="task-card" role="listitem" tabindex="0"
           draggable="true"
           data-task-id="${t.id}"
           data-status="${s}"
           aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Drag or click to move.">
+        <button class="btn-delete-task" data-task-id="${t.id}" title="Delete task" aria-label="Delete task">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </button>
         <div class="task-title">
           <span class="drag-handle" aria-hidden="true">⠿</span>${esc(t.title)}
         </div>
         <div class="task-footer">
           <span class="tag tag-${t.tag}">${t.tag}</span>
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px">
             <span class="priority-dot p-${t.priority}" aria-label="Priority: ${t.priority}"></span>
             <div class="task-av ${m.cls}" aria-label="${esc(t.assignee)}">${m.initials}</div>
           </div>
         </div>
-        <div class="move-hint" aria-hidden="true">Drag or click → ${nextLabel[s]}</div>
+        <div class="move-hint" aria-hidden="true">Click to move → ${nextLabel[s]}</div>
       </article>`;
-    }).join('');
+        }).join('');
 
-    // ── Wire card events ────────────────────────────────────────
-    el.querySelectorAll('.task-card').forEach(card => {
-      const id = card.dataset.taskId;
+        el.querySelectorAll('.task-card').forEach(card => {
+          const id = card.dataset.taskId;
+          card.addEventListener('click', e => {
+            if (e.target.closest('.btn-delete-task')) return;
+            moveTask(id);
+          });
+          card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveTask(id); }
+          });
 
-      // Click to advance (keyboard-accessible)
-      card.addEventListener('click', () => moveTask(id));
-      card.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveTask(id); }
+          const delBtn = card.querySelector('.btn-delete-task');
+          delBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            deleteTask(id);
+          });
+
+          card.addEventListener('dragstart', e => {
+            dragId = id;
+            dragFrom = card.dataset.status;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', id);
+            requestAnimationFrame(() => card.classList.add('dragging'));
+          });
+          card.addEventListener('dragend', () => {
+            dragId = dragFrom = null;
+            document.querySelectorAll('.task-card').forEach(c => c.classList.remove('dragging'));
+            document.querySelectorAll('.col').forEach(c => c.classList.remove('drag-over'));
+            removeGhost();
+          });
+        });
+
+        const colEl = el.closest('.col') || el.parentElement;
+        colEl.addEventListener('dragover', e => {
+          if (!dragId) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          colEl.classList.add('drag-over');
+          ensureGhost(colEl);
+        });
+        colEl.addEventListener('dragleave', e => {
+          if (!colEl.contains(e.relatedTarget)) {
+            colEl.classList.remove('drag-over');
+            removeGhost();
+          }
+        });
+        colEl.addEventListener('drop', async e => {
+          e.preventDefault();
+          colEl.classList.remove('drag-over');
+          removeGhost();
+          const targetStatus = s;
+          if (!dragId || targetStatus === dragFrom) { dragId = dragFrom = null; return; }
+          await dropTask(dragId, targetStatus);
+          dragId = dragFrom = null;
+        });
       });
+      updateMetrics();
+    }
 
-      // Drag events on the card
-      card.addEventListener('dragstart', e => {
-        dragId   = id;
-        dragFrom = card.dataset.status;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', id);
-        // Delay class so browser captures the un-faded ghost
-        requestAnimationFrame(() => card.classList.add('dragging'));
-      });
-      card.addEventListener('dragend', () => {
-        dragId = dragFrom = null;
-        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('dragging'));
-        document.querySelectorAll('.col').forEach(c => c.classList.remove('drag-over'));
-        removeGhost();
-      });
-    });
-
-    // ── Wire column drop zone events ─────────────────────────────
-    const colEl = el.closest('.col') || el.parentElement;
-    colEl.addEventListener('dragover', e => {
-      if (!dragId) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      colEl.classList.add('drag-over');
-      ensureGhost(colEl);
-    });
-    colEl.addEventListener('dragleave', e => {
-      if (!colEl.contains(e.relatedTarget)) {
-        colEl.classList.remove('drag-over');
-        removeGhost();
-      }
-    });
-    colEl.addEventListener('drop', async e => {
-      e.preventDefault();
-      colEl.classList.remove('drag-over');
+    function ensureGhost(colEl) {
+      if (colEl.querySelector('.drop-ghost')) return;
       removeGhost();
-      const targetStatus = s;
-      if (!dragId || targetStatus === dragFrom) { dragId = dragFrom = null; return; }
-      await dropTask(dragId, targetStatus);
-      dragId = dragFrom = null;
-    });
-  });
-  updateMetrics();
-}
+      const ghost = document.createElement('div');
+      ghost.className = 'drop-ghost';
+      ghost.setAttribute('aria-hidden', 'true');
+      const list = colEl.querySelector('[role="list"]') || colEl;
+      list.appendChild(ghost);
+    }
+    function removeGhost() {
+      document.querySelectorAll('.drop-ghost').forEach(g => g.remove());
+    }
 
-// Insert a ghost placeholder into the hovered column (once)
-function ensureGhost(colEl) {
-  if (colEl.querySelector('.drop-ghost')) return;
-  removeGhost();
-  const ghost = document.createElement('div');
-  ghost.className = 'drop-ghost';
-  ghost.setAttribute('aria-hidden', 'true');
-  const list = colEl.querySelector('[role="list"]') || colEl;
-  list.appendChild(ghost);
-}
-function removeGhost() {
-  document.querySelectorAll('.drop-ghost').forEach(g => g.remove());
-}
+    async function dropTask(id, newStatus) {
+      const task = tasks.find(t => t.id === id);
+      if (!task || task.status === newStatus) return;
+      const res = await apiFetch(`/api/tasks/${id}`, { method: 'PUT', body: { status: newStatus } });
+      if (res?.success) {
+        task.status = newStatus;
+        const actText = `"${task.title}" moved to ${colLabel[newStatus]}`;
+        const actRes = await apiFetch('/api/activities', { method: 'POST', body: { text: actText, color: '#1D9E75' } });
+        if (actRes?.success) activities.unshift(actRes.data);
+        renderBoard();
+        renderActivity();
+      }
+    }
 
-// Move a card to a specific status (used by drag-drop)
-async function dropTask(id, newStatus) {
-  const task = tasks.find(t => t.id === id);
-  if (!task || task.status === newStatus) return;
-  const res = await apiFetch(`/api/tasks/${id}`, {method:'PUT', body:{status:newStatus}});
-  if (res?.success) {
-    task.status = newStatus;
-    activities.unshift({text:`"${task.title}" moved to ${colLabel[newStatus]}`, time:'just now', color:'#1D9E75'});
-    renderBoard();
-    renderActivity();
-  }
-}
+    async function moveTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      const newStatus = nextStatus[task.status];
+      const res = await apiFetch(`/api/tasks/${id}`, { method: 'PUT', body: { status: newStatus } });
+      if (res?.success) {
+        task.status = newStatus;
+        const actText = `"${task.title}" moved to ${nextLabel[task.status]}`;
+        const actRes = await apiFetch('/api/activities', { method: 'POST', body: { text: actText, color: '#10B981' } });
+        if (actRes?.success) activities.unshift(actRes.data);
+        renderBoard();
+        renderActivity();
+      }
+    }
 
-async function moveTask(id) {
-  const task = tasks.find(t => t.id === id);
-  if (!task) return;
-  const newStatus = nextStatus[task.status];
-  const res = await apiFetch(`/api/tasks/${id}`, {method:'PUT', body:{status:newStatus}});
-  if (res?.success) {
-    task.status = newStatus;
-    activities.unshift({text:`"${task.title}" moved to ${nextLabel[task.status]}`, time:'just now', color:'#1D9E75'});
-    renderBoard();
-    renderActivity();
-  }
-}
+    async function deleteTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      if (!confirm(`Are you sure you want to delete "${task.title}"?`)) return;
 
-function updateMetrics() {
-  const total = tasks.length;
-  const done  = tasks.filter(t => t.status === 'done').length;
-  const prog  = tasks.filter(t => t.status === 'progress').length;
-  const pct   = total ? Math.round(done / total * 100) : 0;
-  document.getElementById('m-total').textContent = total;
-  document.getElementById('m-done').textContent  = done;
-  document.getElementById('m-prog').textContent  = prog;
-  document.getElementById('m-pct').textContent   = pct + '%';
-  document.getElementById('m-bar').style.width   = pct + '%';
-}
+      const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      if (res?.success) {
+        tasks = tasks.filter(t => t.id !== id);
+        const actText = `Task "${task.title}" was deleted`;
+        const actRes = await apiFetch('/api/activities', { method: 'POST', body: { text: actText, color: '#EF4444' } });
+        if (actRes?.success) activities.unshift(actRes.data);
+        renderBoard();
+        renderActivity();
+      }
+    }
 
-// ── Add Task ──────────────────────────────────────────────────────────────────
-function openModal() {
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('t-title').focus();
-}
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-async function saveTask() {
-  const title = document.getElementById('t-title').value.trim();
-  if (!title) { document.getElementById('t-title').focus(); return; }
-  const body = {
-    title,
-    assignee: document.getElementById('t-assign').value,
-    tag:      document.getElementById('t-tag').value,
-    priority: document.getElementById('t-priority').value,
-    description: document.getElementById('t-desc').value,
-  };
-  const res = await apiFetch('/api/tasks', {method:'POST', body});
-  if (res?.success) {
-    tasks.push(res.data);
-    activities.unshift({text:`New task "${title}" created`, time:'just now', color:'#1D9E75'});
-    ['t-title','t-desc'].forEach(id => document.getElementById(id).value = '');
-    closeModal();
-    renderBoard();
-    renderActivity();
-  }
-}
+    function exportToCsv() {
+      window.location.href = '/api/export';
+    }
 
-// ── Chat ──────────────────────────────────────────────────────────────────────
-function renderChat() {
-  const el = document.getElementById('messages');
-  el.innerHTML = messages.map(m => {
-    const info = members[m.user] || {initials:m.user?.slice(0,2)||'?', cls:'av-g'};
-    const mine = m.user === 'Karthik A';
-    return `<div class="msg-row ${mine?'mine':''}" role="article" aria-label="Message from ${esc(m.user)}">
+    function updateMetrics() {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.status === 'done').length;
+      const prog = tasks.filter(t => t.status === 'progress').length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('m-total').textContent = total;
+      document.getElementById('m-done').textContent = done;
+      document.getElementById('m-prog').textContent = prog;
+      document.getElementById('m-pct').textContent = pct + '%';
+      document.getElementById('m-bar').style.width = pct + '%';
+    }
+
+    // ── Add Task ──────────────────────────────────────────────────────────────────
+    function openModal() {
+      document.getElementById('modal').classList.add('open');
+      document.getElementById('t-title').focus();
+    }
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+    async function saveTask() {
+      const title = document.getElementById('t-title').value.trim();
+      if (!title) { document.getElementById('t-title').focus(); return; }
+      const body = {
+        title,
+        assignee: document.getElementById('t-assign').value,
+        tag: document.getElementById('t-tag').value,
+        priority: document.getElementById('t-priority').value,
+        description: document.getElementById('t-desc').value,
+      };
+      const res = await apiFetch('/api/tasks', { method: 'POST', body });
+      if (res?.success) {
+        tasks.push(res.data);
+        const actText = `New task "${title}" created by ${getCurrentUser()}`;
+        const actRes = await apiFetch('/api/activities', { method: 'POST', body: { text: actText, color: '#534AB7' } });
+        if (actRes?.success) activities.unshift(actRes.data);
+        ['t-title', 't-desc'].forEach(id => document.getElementById(id).value = '');
+        closeModal();
+        renderBoard();
+        renderActivity();
+      }
+    }
+
+    // ── Chat ──────────────────────────────────────────────────────────────────────
+    function renderChat() {
+      const el = document.getElementById('messages');
+      el.innerHTML = messages.map(m => {
+        const info = members[m.user] || { initials: m.user?.slice(0, 2) || '?', cls: 'av-g' };
+        const mine = m.user === getCurrentUser();
+        return `<div class="msg-row ${mine ? 'mine' : ''}" role="article" aria-label="Message from ${esc(m.user)}">
       <div class="msg-av ${info.cls}" aria-hidden="true">${info.initials}</div>
       <div class="msg-body">
         <div class="msg-meta">
@@ -594,39 +1808,42 @@ function renderChat() {
         <div class="msg-text">${esc(m.text)}</div>
       </div>
     </div>`;
-  }).join('');
-  el.scrollTop = el.scrollHeight;
-}
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    }
 
-async function sendMsg() {
-  const inp = document.getElementById('chat-in');
-  const text = inp.value.trim();
-  if (!text) return;
-  const res = await apiFetch('/api/messages', {method:'POST', body:{user:'Karthik A', text}});
-  if (res?.success) {
-    messages.push(res.data);
-    activities.unshift({text:`Karthik A sent a message`, time:'just now', color:'#534AB7'});
-    inp.value = '';
-    renderChat();
-    renderActivity();
-  }
-}
+    async function sendMsg() {
+      const inp = document.getElementById('chat-in');
+      const text = inp.value.trim();
+      if (!text) return;
+      const user = getCurrentUser();
+      const res = await apiFetch('/api/messages', { method: 'POST', body: { user, text } });
+      if (res?.success) {
+        messages.push(res.data);
+        const actText = `${user} sent a message`;
+        const actRes = await apiFetch('/api/activities', { method: 'POST', body: { text: actText, color: '#534AB7' } });
+        if (actRes?.success) activities.unshift(actRes.data);
+        inp.value = '';
+        renderChat();
+        renderActivity();
+      }
+    }
 
-// ── Activity ──────────────────────────────────────────────────────────────────
-function renderActivity() {
-  const el = document.getElementById('activity-list');
-  el.innerHTML = activities.slice(0,8).map(a =>
-    `<div class="act-item" role="listitem">
+    // ── Activity ──────────────────────────────────────────────────────────────────
+    function renderActivity() {
+      const el = document.getElementById('activity-list');
+      el.innerHTML = activities.slice(0, 8).map(a =>
+        `<div class="act-item" role="listitem">
       <div class="act-dot" style="background:${a.color}" aria-hidden="true"></div>
-      <div><div class="act-text">${esc(a.text)}</div><div class="act-time">${a.time}</div></div>
+      <div><div class="act-text">${esc(a.text)}</div><div class="act-time">${a.time || formatTime(a.timestamp)}</div></div>
     </div>`).join('');
 
-  const mp = document.getElementById('member-progress');
-  mp.innerHTML = Object.entries(members).map(([name, info]) => {
-    const total = tasks.filter(t => t.assignee === name).length;
-    const done  = tasks.filter(t => t.assignee === name && t.status === 'done').length;
-    const pct   = total ? Math.round(done / total * 100) : 0;
-    return `<div class="member-row">
+      const mp = document.getElementById('member-progress');
+      mp.innerHTML = Object.entries(members).map(([name, info]) => {
+        const total = tasks.filter(t => t.assignee === name).length;
+        const done = tasks.filter(t => t.assignee === name && t.status === 'done').length;
+        const pct = total ? Math.round(done / total * 100) : 0;
+        return `<div class="member-row">
       <div class="member-info">
         <span class="member-name">
           <div class="avatar ${info.cls}" style="width:24px;height:24px;font-size:9px" aria-hidden="true">${info.initials}</div>
@@ -638,60 +1855,237 @@ function renderActivity() {
         <div class="bar-fill" style="width:${pct}%"></div>
       </div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(t => {
-    t.setAttribute('aria-selected', 'false');
-  });
-  btn.setAttribute('aria-selected', 'true');
-  ['kanban','chat','activity'].forEach(n => {
-    const panel = document.getElementById('panel-'+n);
-    if (n === name) { panel.removeAttribute('hidden'); }
-    else            { panel.setAttribute('hidden',''); }
-  });
-  if (name === 'chat') renderChat();
-}
+    // ── Tab switching ─────────────────────────────────────────────────────────────
+    function switchTab(name, btn) {
+      document.querySelectorAll('.tab').forEach(t => {
+        t.setAttribute('aria-selected', 'false');
+      });
+      btn.setAttribute('aria-selected', 'true');
+      ['kanban', 'chat', 'activity'].forEach(n => {
+        const panel = document.getElementById('panel-' + n);
+        if (n === name) { panel.removeAttribute('hidden'); }
+        else { panel.setAttribute('hidden', ''); }
+      });
+      if (name === 'chat') renderChat();
+    }
 
-// ── Event wiring (replaces all inline handlers) ──────────────────────────────
-document.getElementById('tab-kanban').addEventListener('click', function(){ switchTab('kanban', this); });
-document.getElementById('tab-chat').addEventListener('click', function(){ switchTab('chat', this); });
-document.getElementById('tab-activity').addEventListener('click', function(){ switchTab('activity', this); });
+    // ── AI Suggest ────────────────────────────────────────────────────────────────
+    let _aiSuggestion = null;
 
-document.getElementById('btn-add-task').addEventListener('click', openModal);
-document.getElementById('btn-cancel').addEventListener('click', closeModal);
-document.getElementById('btn-save').addEventListener('click', saveTask);
+    async function runAiSuggest() {
+      const title = document.getElementById('t-title').value.trim();
+      const tag = document.getElementById('t-tag').value;
+      if (!title) {
+        const inp = document.getElementById('t-title');
+        inp.focus();
+        inp.style.borderColor = '#E24B4A';
+        setTimeout(() => { inp.style.borderColor = ''; }, 1500);
+        return;
+      }
+      const btn = document.getElementById('btn-ai-suggest');
+      const loading = document.getElementById('ai-loading');
+      const panel = document.getElementById('ai-panel');
+      btn.disabled = true;
+      loading.removeAttribute('hidden');
+      panel.setAttribute('hidden', '');
+      try {
+        const res = await apiFetch('/api/ai/suggest', { method: 'POST', body: { title, tag } });
+        if (!res?.success) throw new Error('AI suggest failed');
+        _aiSuggestion = res.suggestion;
+        const { assignee, confidence, reason, alternates, poweredBy } = res.suggestion;
+        const isAI = poweredBy === 'teamflow-ai';
+        document.getElementById('ai-badge').textContent = '✦ TeamFlow AI';
+        document.getElementById('ai-badge').className = 'ai-badge vertex';
+        document.getElementById('ai-conf').textContent = confidence + '% match';
+        document.getElementById('ai-assignee-name').textContent = assignee;
+        document.getElementById('ai-reason-text').textContent = reason;
+        document.getElementById('ai-alts').innerHTML = alternates
+          .map(a => `<span class="ai-alt-chip">${esc(a)}</span>`).join('');
+        panel.removeAttribute('hidden');
+      } catch (err) {
+        console.error('AI suggest error:', err);
+        alert('AI suggestion unavailable. Please pick an assignee manually.');
+      } finally {
+        btn.disabled = false;
+        loading.setAttribute('hidden', '');
+      }
+    }
 
-document.getElementById('btn-send').addEventListener('click', sendMsg);
-document.getElementById('chat-in').addEventListener('keydown', e => {
-  if (e.key === 'Enter') sendMsg();
-});
+    function applyAiSuggestion() {
+      if (!_aiSuggestion) return;
+      const sel = document.getElementById('t-assign');
+      sel.value = _aiSuggestion.assignee;
+      sel.style.borderColor = 'var(--brand)';
+      setTimeout(() => { sel.style.borderColor = ''; }, 1500);
+      document.getElementById('ai-panel').setAttribute('hidden', '');
+      _aiSuggestion = null;
+    }
 
-// Close modal when clicking the backdrop
-document.getElementById('modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal')) closeModal();
-});
+    // Reset AI panel when modal is closed
+    const _origCloseModal = closeModal;
+    closeModal = function () {
+      _origCloseModal();
+      document.getElementById('ai-panel').setAttribute('hidden', '');
+      document.getElementById('ai-loading').setAttribute('hidden', '');
+      _aiSuggestion = null;
+    };
 
-// Keyboard: Escape closes modal
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
+    // ── Firebase Auth ─────────────────────────────────────────────────────────────
+    // Replace REPLACE_WITH_YOUR_FIREBASE_API_KEY with your project's web API key
+    // Firebase Console → Project Settings → General → Your Apps → Web App
+    const _FIREBASE_CONFIG = {
+      apiKey: 'REPLACE_WITH_YOUR_FIREBASE_API_KEY',
+      authDomain: 'teamflow-495105.firebaseapp.com',
+      projectId: 'teamflow-495105',
+    };
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function formatTime(ts) {
-  if (!ts) return '';
-  try {
-    return new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  } catch { return ''; }
-}
+    let _idToken = null;
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadAll();
-</script>
+    // Override apiFetch to attach auth token when available
+    const _baseFetch = apiFetch;
+    apiFetch = async function (url, opts = {}) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (_idToken) headers['Authorization'] = 'Bearer ' + _idToken;
+      try {
+        const res = await fetch(url, {
+          headers,
+          ...opts,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+        });
+        return await res.json();
+      } catch (e) {
+        console.error('API error', e);
+        return null;
+      }
+    };
+
+    function _handleAuthChange(user) {
+      const btnSignin = document.getElementById('btn-signin');
+      const authUser = document.getElementById('auth-user');
+      const authName = document.getElementById('auth-name');
+      const authAv = document.getElementById('auth-avatar');
+      if (user) {
+        btnSignin.setAttribute('hidden', '');
+        authUser.removeAttribute('hidden');
+        const displayName = user.displayName || user.email || 'User';
+        authName.textContent = displayName;
+        authAv.textContent = displayName.slice(0, 2).toUpperCase();
+        user.getIdToken().then(tok => { _idToken = tok; });
+        // Auto-match signed-in user to a team member
+        const matched = Object.keys(members).find(m => m.toLowerCase() === displayName.toLowerCase());
+        if (matched) {
+          setCurrentUser(matched);
+          document.getElementById('chat-user').value = matched;
+        }
+      } else {
+        _idToken = null;
+        btnSignin.removeAttribute('hidden');
+        authUser.setAttribute('hidden', '');
+      }
+    }
+
+    async function _signInGoogle() {
+      if (typeof firebase === 'undefined') {
+        alert('Firebase SDK not loaded. Please refresh and try again.');
+        return;
+      }
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await firebase.auth().signInWithPopup(provider);
+      } catch (e) {
+        console.error('Sign-in error:', e);
+        if (e.code !== 'auth/popup-closed-by-user') {
+          alert('Sign-in failed: ' + (e.message || e.code));
+        }
+      }
+    }
+
+    async function _signOut() {
+      if (typeof firebase === 'undefined') return;
+      await firebase.auth().signOut();
+    }
+
+    function initFirebaseAuth() {
+      if (_FIREBASE_CONFIG.apiKey === 'REPLACE_WITH_YOUR_FIREBASE_API_KEY') {
+        console.info('[TeamFlow] Firebase Auth: provide API key in FIREBASE_CONFIG to enable.');
+        return;
+      }
+      if (typeof firebase === 'undefined') {
+        console.warn('[TeamFlow] Firebase SDK not loaded.');
+        return;
+      }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(_FIREBASE_CONFIG);
+        firebase.auth().onAuthStateChanged(_handleAuthChange);
+        document.getElementById('btn-signin').addEventListener('click', _signInGoogle);
+        document.getElementById('btn-signout').addEventListener('click', _signOut);
+      } catch (e) {
+        console.warn('[TeamFlow] Firebase Auth init error:', e);
+      }
+    }
+
+    // ── Event wiring (replaces all inline handlers) ──────────────────────────────
+    document.getElementById('tab-kanban').addEventListener('click', function () { switchTab('kanban', this); });
+    document.getElementById('tab-chat').addEventListener('click', function () { switchTab('chat', this); });
+    document.getElementById('tab-activity').addEventListener('click', function () { switchTab('activity', this); });
+
+    document.getElementById('btn-add-task').addEventListener('click', openModal);
+    document.getElementById('btn-export').addEventListener('click', exportToCsv);
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+    document.getElementById('btn-save').addEventListener('click', saveTask);
+
+    document.getElementById('btn-send').addEventListener('click', sendMsg);
+    document.getElementById('chat-in').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMsg();
+    });
+
+    // AI Suggest button wiring
+    document.getElementById('btn-ai-suggest').addEventListener('click', runAiSuggest);
+    document.getElementById('btn-apply-ai').addEventListener('click', applyAiSuggestion);
+
+    // Initialize chat-user selector from localStorage
+    (function initChatUser() {
+      const sel = document.getElementById('chat-user');
+      const saved = getCurrentUser();
+      sel.value = saved;
+      sel.addEventListener('change', () => {
+        setCurrentUser(sel.value);
+        renderChat();
+      });
+    })();
+
+    // Close modal when clicking the backdrop
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('modal')) closeModal();
+    });
+
+    // Keyboard: Escape closes modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Utils ─────────────────────────────────────────────────────────────────────
+    function esc(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function formatTime(ts) {
+      if (!ts) return '';
+      try {
+        return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    loadAll();
+    window.addEventListener('load', initFirebaseAuth);
+  </script>
+
+  <!-- Firebase SDK (compat) — must load before initFirebaseAuth runs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </body>
+
 </html>
