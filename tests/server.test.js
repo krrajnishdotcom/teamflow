@@ -1,6 +1,7 @@
 /**
  * TeamFlow API Tests
- * Coverage: Tasks CRUD, Messages, Analytics, Health, Error handling
+ * Coverage: Tasks CRUD, Messages, Analytics, AI Suggest, Export, Health, Security
+ * 21 tests total
  */
 
 'use strict';
@@ -15,6 +16,11 @@ describe('Health Check', () => {
     expect(res.body.status).toBe('healthy');
     expect(res.body.service).toBe('teamflow');
     expect(res.body.timestamp).toBeDefined();
+  });
+
+  it('GET /health includes database info', async () => {
+    const res = await request(app).get('/health');
+    expect(res.body.database).toBeDefined();
   });
 });
 
@@ -44,6 +50,14 @@ describe('Tasks API', () => {
     const res = await request(app)
       .post('/api/tasks')
       .send({ title: '', assignee: 'User', tag: 'feature', priority: 'low' });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('POST /api/tasks rejects missing assignee', async () => {
+    const res = await request(app)
+      .post('/api/tasks')
+      .send({ title: 'No Assignee Task', tag: 'bug', priority: 'low' });
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
   });
@@ -128,7 +142,43 @@ describe('Analytics API', () => {
     expect(typeof res.body.data.completionRate).toBe('number');
     expect(res.body.data.completionRate).toBeGreaterThanOrEqual(0);
     expect(res.body.data.completionRate).toBeLessThanOrEqual(100);
+  });
+
+  it('GET /api/analytics byMember is an object', async () => {
+    const res = await request(app).get('/api/analytics');
     expect(typeof res.body.data.byMember).toBe('object');
+    expect(res.body.data.byMember).not.toBeNull();
+  });
+});
+
+describe('AI Suggest API', () => {
+  it('POST /api/ai/suggest returns a recommendation', async () => {
+    const res = await request(app)
+      .post('/api/ai/suggest')
+      .send({ title: 'Build login page', tag: 'frontend' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.suggestion.assignee).toBeDefined();
+    expect(res.body.suggestion.confidence).toBeGreaterThan(0);
+    expect(res.body.suggestion.reason).toBeDefined();
+    expect(Array.isArray(res.body.suggestion.alternates)).toBe(true);
+  });
+
+  it('POST /api/ai/suggest rejects missing title', async () => {
+    const res = await request(app)
+      .post('/api/ai/suggest')
+      .send({ tag: 'backend' });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+describe('Export API', () => {
+  it('GET /api/export returns CSV', async () => {
+    const res = await request(app).get('/api/export');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/csv/);
+    expect(res.text).toContain('id,title,status');
   });
 });
 

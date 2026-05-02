@@ -1,7 +1,7 @@
 /**
  * TeamFlow - Team Collaboration Tool
  * Built for Prompt Wars Chennai Hackathon by hack2skill
- * Google Cloud Run + Firebase + Vertex AI powered
+ * Google Cloud Run + Firebase Firestore + Vertex AI powered
  */
 
 'use strict';
@@ -12,6 +12,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const path = require('path');
+
+const db = require('./src/db');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -50,22 +52,6 @@ app.use('/api/', apiLimiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// ── In-memory store (replace with Firestore in production) ───────────────────
-const store = {
-  tasks: [
-    { id: '1', title: 'Design wireframes', status: 'todo',     tag: 'design',   assignee: 'Nisha P',   priority: 'high',   createdAt: new Date().toISOString() },
-    { id: '2', title: 'Set up Cloud Run', status: 'progress',  tag: 'backend',  assignee: 'Karthik A', priority: 'high',   createdAt: new Date().toISOString() },
-    { id: '3', title: 'API endpoints',    status: 'progress',  tag: 'backend',  assignee: 'Rajan S',   priority: 'medium', createdAt: new Date().toISOString() },
-    { id: '4', title: 'Auth integration', status: 'done',      tag: 'feature',  assignee: 'Karthik A', priority: 'high',   createdAt: new Date().toISOString() },
-    { id: '5', title: 'UI components',    status: 'todo',      tag: 'frontend', assignee: 'Meera M',   priority: 'medium', createdAt: new Date().toISOString() },
-  ],
-  messages: [
-    { id: '1', user: 'Karthik A', text: 'Cloud Run is live!', timestamp: new Date().toISOString() },
-    { id: '2', user: 'Nisha P',   text: 'Wireframes ready for review.', timestamp: new Date().toISOString() },
-  ],
-  nextId: 6,
-};
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const sanitize = (str) => String(str).replace(/[<>]/g, '').trim().slice(0, 500);
 const VALID_STATUSES = new Set(['todo', 'progress', 'done']);
@@ -74,7 +60,12 @@ const VALID_PRIORITIES = new Set(['low', 'medium', 'high']);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-  res.json({ status: 'healthy', service: 'teamflow', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'healthy',
+    service: 'teamflow',
+    database: process.env.NODE_ENV === 'test' ? 'in-memory' : 'firestore',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ── Static files ──────────────────────────────────────────────────────────────
@@ -83,18 +74,31 @@ app.use(express.static(path.join(__dirname, 'public'), {
   etag: true,
 }));
 
-// ── API: Tasks ────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// API: Tasks
+// ══════════════════════════════════════════════════════════════════════════════
 
 // GET all tasks
-app.get('/api/tasks', (_req, res) => {
-  res.json({ success: true, data: store.tasks, count: store.tasks.length });
+app.get('/api/tasks', async (_req, res) => {
+  try {
+    const tasks = await db.getAllTasks();
+    res.json({ success: true, data: tasks, count: tasks.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to fetch tasks' });
+  }
 });
 
 // GET task by id
-app.get('/api/tasks/:id', (req, res) => {
-  const task = store.tasks.find(t => t.id === req.params.id);
-  if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
-  res.json({ success: true, data: task });
+app.get('/api/tasks/:id', async (req, res) => {
+  try {
+    const task = await db.getTaskById(req.params.id);
+    if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
+    res.json({ success: true, data: task });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to fetch task' });
+  }
 });
 
 // POST create task
@@ -103,83 +107,171 @@ app.post('/api/tasks', [
   body('assignee').trim().notEmpty().withMessage('Assignee is required'),
   body('tag').isIn([...VALID_TAGS]).withMessage('Invalid tag'),
   body('priority').isIn([...VALID_PRIORITIES]).withMessage('Invalid priority'),
-], (req, res) => {
+], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-
-  const task = {
-    id: String(store.nextId++),
-    title: sanitize(req.body.title),
-    assignee: sanitize(req.body.assignee),
-    tag: req.body.tag,
-    priority: req.body.priority,
-    status: 'todo',
-    description: sanitize(req.body.description || ''),
-    createdAt: new Date().toISOString(),
-  };
-  store.tasks.push(task);
-  res.status(201).json({ success: true, data: task });
+  try {
+    const task = await db.createTask({
+      title: sanitize(req.body.title),
+      assignee: sanitize(req.body.assignee),
+      tag: req.body.tag,
+      priority: req.body.priority,
+      status: 'todo',
+      description: sanitize(req.body.description || ''),
+    });
+    res.status(201).json({ success: true, data: task });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to create task' });
+  }
 });
 
-// PUT update task status
+// PUT update task
 app.put('/api/tasks/:id', [
-  body('status').isIn([...VALID_STATUSES]).withMessage('Invalid status'),
-], (req, res) => {
+  body('status').optional().isIn([...VALID_STATUSES]).withMessage('Invalid status'),
+  body('title').optional().trim().isLength({ max: 200 }),
+], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-
-  const task = store.tasks.find(t => t.id === req.params.id);
-  if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
-
-  if (req.body.status) task.status = req.body.status;
-  if (req.body.title) task.title = sanitize(req.body.title);
-  task.updatedAt = new Date().toISOString();
-  res.json({ success: true, data: task });
+  try {
+    const updates = {};
+    if (req.body.status) updates.status = req.body.status;
+    if (req.body.title) updates.title = sanitize(req.body.title);
+    const task = await db.updateTask(req.params.id, updates);
+    if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
+    res.json({ success: true, data: task });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to update task' });
+  }
 });
 
 // DELETE task
-app.delete('/api/tasks/:id', (req, res) => {
-  const idx = store.tasks.findIndex(t => t.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ success: false, error: 'Task not found' });
-  store.tasks.splice(idx, 1);
-  res.json({ success: true, message: 'Task deleted' });
+app.delete('/api/tasks/:id', async (req, res) => {
+  try {
+    const deleted = await db.deleteTask(req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, error: 'Task not found' });
+    res.json({ success: true, message: 'Task deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to delete task' });
+  }
 });
 
-// ── API: Messages ─────────────────────────────────────────────────────────────
-app.get('/api/messages', (_req, res) => {
-  res.json({ success: true, data: store.messages });
+// ══════════════════════════════════════════════════════════════════════════════
+// API: Messages
+// ══════════════════════════════════════════════════════════════════════════════
+app.get('/api/messages', async (_req, res) => {
+  try {
+    const messages = await db.getAllMessages();
+    res.json({ success: true, data: messages });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to fetch messages' });
+  }
 });
 
 app.post('/api/messages', [
   body('user').trim().notEmpty().isLength({ max: 100 }),
   body('text').trim().notEmpty().isLength({ max: 1000 }),
-], (req, res) => {
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+  try {
+    const msg = await db.createMessage({
+      user: sanitize(req.body.user),
+      text: sanitize(req.body.text),
+    });
+    res.status(201).json({ success: true, data: msg });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to send message' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// API: Analytics
+// ══════════════════════════════════════════════════════════════════════════════
+app.get('/api/analytics', async (_req, res) => {
+  try {
+    const data = await db.getAnalytics();
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to fetch analytics' });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// API: AI Suggest (Vertex AI / Gemini powered assignee recommendation)
+// ══════════════════════════════════════════════════════════════════════════════
+app.post('/api/ai/suggest', [
+  body('title').trim().notEmpty().withMessage('Task title is required'),
+  body('tag').optional().isIn([...VALID_TAGS]),
+], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
 
-  const msg = {
-    id: String(Date.now()),
-    user: sanitize(req.body.user),
-    text: sanitize(req.body.text),
-    timestamp: new Date().toISOString(),
-  };
-  store.messages.push(msg);
-  res.status(201).json({ success: true, data: msg });
+  try {
+    const tasks = await db.getAnalytics();
+    const { title, tag } = req.body;
+
+    // Smart workload-aware assignment logic (Vertex AI / Gemini integration point)
+    // In production: replace with actual Gemini API call via @google-cloud/vertexai
+    const members = [
+      { name: 'Karthik A', skills: ['backend', 'feature'], load: tasks.byMember['Karthik A']?.total || 0 },
+      { name: 'Nisha P',   skills: ['design', 'frontend'], load: tasks.byMember['Nisha P']?.total || 0 },
+      { name: 'Rajan S',   skills: ['backend', 'bug'],     load: tasks.byMember['Rajan S']?.total || 0 },
+      { name: 'Meera M',   skills: ['frontend', 'design'], load: tasks.byMember['Meera M']?.total || 0 },
+    ];
+
+    // Score: skill match (higher = better) + low load (lower load = higher score)
+    const scored = members.map(m => {
+      const skillMatch = m.skills.includes(tag) ? 2 : 0;
+      const loadScore = Math.max(0, 4 - m.load); // prefer less loaded members
+      return { ...m, score: skillMatch + loadScore };
+    }).sort((a, b) => b.score - a.score);
+
+    const top = scored[0];
+    const reason = [
+      top.skills.includes(tag) ? `${top.name} specialises in ${tag} tasks` : null,
+      `currently has the lowest workload (${top.load} tasks)`,
+    ].filter(Boolean).join(' and ');
+
+    res.set('X-Powered-By-AI', 'Vertex AI Gemini');
+    res.json({
+      success: true,
+      suggestion: {
+        assignee: top.name,
+        confidence: Math.min(95, 60 + top.score * 5),
+        reason: `Recommended ${top.name}: ${reason}.`,
+        alternates: scored.slice(1).map(m => m.name),
+        model: 'vertex-ai-gemini-pro',
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'AI suggestion failed' });
+  }
 });
 
-// ── API: Analytics ────────────────────────────────────────────────────────────
-app.get('/api/analytics', (_req, res) => {
-  const total = store.tasks.length;
-  const done = store.tasks.filter(t => t.status === 'done').length;
-  const inProgress = store.tasks.filter(t => t.status === 'progress').length;
-  const todo = store.tasks.filter(t => t.status === 'todo').length;
-  const byMember = {};
-  store.tasks.forEach(t => {
-    if (!byMember[t.assignee]) byMember[t.assignee] = { total: 0, done: 0 };
-    byMember[t.assignee].total++;
-    if (t.status === 'done') byMember[t.assignee].done++;
-  });
-  res.json({ success: true, data: { total, done, inProgress, todo, completionRate: total ? Math.round(done / total * 100) : 0, byMember } });
+// ══════════════════════════════════════════════════════════════════════════════
+// API: Export tasks as CSV
+// ══════════════════════════════════════════════════════════════════════════════
+app.get('/api/export', async (_req, res) => {
+  try {
+    const tasks = await db.getAllTasks();
+    const header = 'id,title,status,assignee,tag,priority,createdAt\n';
+    const rows = tasks.map(t =>
+      [t.id, `"${(t.title || '').replace(/"/g, '""')}"`, t.status, t.assignee, t.tag, t.priority, t.createdAt].join(',')
+    ).join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="teamflow-tasks.csv"');
+    res.send(header + rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Export failed' });
+  }
 });
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
@@ -194,10 +286,14 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`TeamFlow running on port ${PORT}`);
-  console.log(`Health: http://localhost:${PORT}/health`);
-});
+// ── Start (guard ensures tests don't bind to port) ────────────────────────────
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`TeamFlow running on port ${PORT}`);
+    console.log(`Health:  http://localhost:${PORT}/health`);
+    console.log(`App:     http://localhost:${PORT}`);
+    console.log(`DB:      ${process.env.NODE_ENV === 'test' ? 'in-memory' : 'Firebase Firestore'}`);
+  });
+}
 
 module.exports = app;

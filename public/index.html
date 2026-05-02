@@ -79,14 +79,17 @@
 
   /* ── Board ───────────────────────────────────────────────────── */
   .board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  .col{background:var(--surface2);border-radius:var(--radius-lg);padding:12px}
+  .col{background:var(--surface2);border-radius:var(--radius-lg);padding:12px;transition:background .2s,box-shadow .2s}
+  .col.drag-over{background:var(--brand-light);box-shadow:0 0 0 2px var(--brand);}
   .col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
   .col-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
   .col-count{background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:500;color:var(--text2);padding:1px 8px}
-  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s;box-shadow:var(--shadow)}
+  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:grab;transition:border-color .15s,box-shadow .15s,opacity .15s,transform .15s;box-shadow:var(--shadow)}
   .task-card:hover{border-color:var(--brand);box-shadow:var(--shadow-lg)}
   .task-card:focus{outline:2px solid var(--brand);outline-offset:1px}
   .task-card:last-child{margin-bottom:0}
+  .task-card.dragging{opacity:.35;transform:scale(.97);cursor:grabbing;box-shadow:none}
+  .drop-ghost{height:68px;border:2px dashed var(--brand);border-radius:var(--radius);background:var(--brand-light);margin-bottom:8px;transition:all .15s}
   .task-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.4}
   .task-footer{display:flex;align-items:center;justify-content:space-between}
   .tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px}
@@ -96,6 +99,7 @@
   .tag-bug{background:var(--red-bg);color:var(--red)}
   .tag-feature{background:var(--green-bg);color:var(--green)}
   .task-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600}
+  .drag-handle{color:var(--text3);font-size:13px;margin-right:6px;cursor:grab;letter-spacing:1px;flex-shrink:0}
   .move-hint{font-size:10px;color:var(--text3);margin-top:6px;display:none}
   .task-card:hover .move-hint{display:block}
   .priority-dot{width:6px;height:6px;border-radius:50%;margin-right:4px;display:inline-block}
@@ -204,9 +208,9 @@
 
   <!-- Tabs -->
   <nav class="tabs" role="tablist" aria-label="Main navigation">
-    <button class="tab" role="tab" aria-selected="true"  aria-controls="panel-kanban"  id="tab-kanban"  onclick="switchTab('kanban',this)">Kanban Board</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chat"    id="tab-chat"    onclick="switchTab('chat',this)">Team Chat</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-activity" id="tab-activity" onclick="switchTab('activity',this)">Activity</button>
+    <button class="tab" role="tab" aria-selected="true"  aria-controls="panel-kanban"  id="tab-kanban">Kanban Board</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chat"    id="tab-chat">Team Chat</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-activity" id="tab-activity">Activity</button>
   </nav>
 
   <!-- Main content -->
@@ -237,7 +241,7 @@
     <div id="panel-kanban" role="tabpanel" aria-labelledby="tab-kanban">
       <div class="board-header">
         <span class="section-title">Sprint Board</span>
-        <button class="btn-add" onclick="openModal()" aria-label="Add new task">
+        <button class="btn-add" id="btn-add-task" aria-label="Add new task">
           <span aria-hidden="true">+</span> Add Task
         </button>
       </div>
@@ -278,8 +282,8 @@
         <div class="messages" id="messages" role="log" aria-live="polite" aria-label="Team chat messages"></div>
         <div class="chat-input-row">
           <label for="chat-in" class="sr-only" style="position:absolute;opacity:0">Message the team</label>
-          <input class="chat-input" id="chat-in" placeholder="Message the team…" aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMsg()"/>
-          <button class="btn-send" onclick="sendMsg()" aria-label="Send message">Send</button>
+          <input class="chat-input" id="chat-in" placeholder="Message the team…" aria-label="Type a message"/>
+          <button class="btn-send" id="btn-send" aria-label="Send message">Send</button>
         </div>
       </div>
     </div>
@@ -302,7 +306,7 @@
 </div>
 
 <!-- Add Task Modal -->
-<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal">
     <h2 id="modal-title">New Task</h2>
     <div class="field">
@@ -341,8 +345,8 @@
       <textarea id="t-desc" placeholder="Optional description…" maxlength="500"></textarea>
     </div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveTask()">Add Task</button>
+      <button class="btn-cancel" id="btn-cancel">Cancel</button>
+      <button class="btn-save" id="btn-save">Add Task</button>
     </div>
   </div>
 </div>
@@ -406,6 +410,11 @@ async function loadAll() {
 // ── Board ─────────────────────────────────────────────────────────────────────
 const nextStatus = {todo:'progress', progress:'done', done:'todo'};
 const nextLabel  = {todo:'In Progress', progress:'Done', done:'To Do'};
+const colLabel   = {todo:'To Do', progress:'In Progress', done:'Done'};
+
+// Drag state
+let dragId   = null;  // id of card being dragged
+let dragFrom = null;  // source column status
 
 function renderBoard() {
   ['todo','progress','done'].forEach(s => {
@@ -415,9 +424,13 @@ function renderBoard() {
     el.innerHTML = col.map(t => {
       const m = members[t.assignee] || {initials:t.assignee?.slice(0,2)||'?',cls:'av-g'};
       return `<article class="task-card" role="listitem" tabindex="0"
-          aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Click to move to ${nextLabel[s]}"
-          onclick="moveTask('${t.id}')" onkeydown="if(event.key==='Enter'||event.key===' ')moveTask('${t.id}')">
-        <div class="task-title">${esc(t.title)}</div>
+          draggable="true"
+          data-task-id="${t.id}"
+          data-status="${s}"
+          aria-label="${esc(t.title)}, ${t.priority} priority, assigned to ${esc(t.assignee)}. Drag or click to move.">
+        <div class="task-title">
+          <span class="drag-handle" aria-hidden="true">⠿</span>${esc(t.title)}
+        </div>
         <div class="task-footer">
           <span class="tag tag-${t.tag}">${t.tag}</span>
           <div style="display:flex;align-items:center;gap:6px">
@@ -425,11 +438,90 @@ function renderBoard() {
             <div class="task-av ${m.cls}" aria-label="${esc(t.assignee)}">${m.initials}</div>
           </div>
         </div>
-        <div class="move-hint" aria-hidden="true">Click → move to ${nextLabel[s]}</div>
+        <div class="move-hint" aria-hidden="true">Drag or click → ${nextLabel[s]}</div>
       </article>`;
     }).join('');
+
+    // ── Wire card events ────────────────────────────────────────
+    el.querySelectorAll('.task-card').forEach(card => {
+      const id = card.dataset.taskId;
+
+      // Click to advance (keyboard-accessible)
+      card.addEventListener('click', () => moveTask(id));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveTask(id); }
+      });
+
+      // Drag events on the card
+      card.addEventListener('dragstart', e => {
+        dragId   = id;
+        dragFrom = card.dataset.status;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', id);
+        // Delay class so browser captures the un-faded ghost
+        requestAnimationFrame(() => card.classList.add('dragging'));
+      });
+      card.addEventListener('dragend', () => {
+        dragId = dragFrom = null;
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('dragging'));
+        document.querySelectorAll('.col').forEach(c => c.classList.remove('drag-over'));
+        removeGhost();
+      });
+    });
+
+    // ── Wire column drop zone events ─────────────────────────────
+    const colEl = el.closest('.col') || el.parentElement;
+    colEl.addEventListener('dragover', e => {
+      if (!dragId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      colEl.classList.add('drag-over');
+      ensureGhost(colEl);
+    });
+    colEl.addEventListener('dragleave', e => {
+      if (!colEl.contains(e.relatedTarget)) {
+        colEl.classList.remove('drag-over');
+        removeGhost();
+      }
+    });
+    colEl.addEventListener('drop', async e => {
+      e.preventDefault();
+      colEl.classList.remove('drag-over');
+      removeGhost();
+      const targetStatus = s;
+      if (!dragId || targetStatus === dragFrom) { dragId = dragFrom = null; return; }
+      await dropTask(dragId, targetStatus);
+      dragId = dragFrom = null;
+    });
   });
   updateMetrics();
+}
+
+// Insert a ghost placeholder into the hovered column (once)
+function ensureGhost(colEl) {
+  if (colEl.querySelector('.drop-ghost')) return;
+  removeGhost();
+  const ghost = document.createElement('div');
+  ghost.className = 'drop-ghost';
+  ghost.setAttribute('aria-hidden', 'true');
+  const list = colEl.querySelector('[role="list"]') || colEl;
+  list.appendChild(ghost);
+}
+function removeGhost() {
+  document.querySelectorAll('.drop-ghost').forEach(g => g.remove());
+}
+
+// Move a card to a specific status (used by drag-drop)
+async function dropTask(id, newStatus) {
+  const task = tasks.find(t => t.id === id);
+  if (!task || task.status === newStatus) return;
+  const res = await apiFetch(`/api/tasks/${id}`, {method:'PUT', body:{status:newStatus}});
+  if (res?.success) {
+    task.status = newStatus;
+    activities.unshift({text:`"${task.title}" moved to ${colLabel[newStatus]}`, time:'just now', color:'#1D9E75'});
+    renderBoard();
+    renderActivity();
+  }
 }
 
 async function moveTask(id) {
@@ -563,7 +655,26 @@ function switchTab(name, btn) {
   if (name === 'chat') renderChat();
 }
 
-// ── Keyboard: Escape closes modal ─────────────────────────────────────────────
+// ── Event wiring (replaces all inline handlers) ──────────────────────────────
+document.getElementById('tab-kanban').addEventListener('click', function(){ switchTab('kanban', this); });
+document.getElementById('tab-chat').addEventListener('click', function(){ switchTab('chat', this); });
+document.getElementById('tab-activity').addEventListener('click', function(){ switchTab('activity', this); });
+
+document.getElementById('btn-add-task').addEventListener('click', openModal);
+document.getElementById('btn-cancel').addEventListener('click', closeModal);
+document.getElementById('btn-save').addEventListener('click', saveTask);
+
+document.getElementById('btn-send').addEventListener('click', sendMsg);
+document.getElementById('chat-in').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMsg();
+});
+
+// Close modal when clicking the backdrop
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+// Keyboard: Escape closes modal
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });

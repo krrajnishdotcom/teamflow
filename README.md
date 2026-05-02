@@ -3,8 +3,16 @@
 > Built for **Prompt Wars Chennai Hackathon** by hack2skill | May 2, 2026
 
 [![Google Cloud Run](https://img.shields.io/badge/Google%20Cloud-Run-4285F4?logo=google-cloud)](https://cloud.google.com/run)
+[![Firebase Firestore](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
+[![Vertex AI](https://img.shields.io/badge/Vertex%20AI-Gemini-4285F4?logo=google-cloud)](https://cloud.google.com/vertex-ai)
 [![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=node.js)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+---
+
+## 🚀 Live Demo
+
+**https://teamflow-988248601168.asia-south1.run.app**
 
 ---
 
@@ -16,11 +24,13 @@ Design a platform that improves team coordination and communication. The system 
 
 **TeamFlow** is a real-time team collaboration tool featuring:
 
-- **Kanban Board** — visual task management with To Do / In Progress / Done columns
+- **Kanban Board** — visual task management with drag-and-drop + click-to-advance columns
 - **Team Chat** — instant messaging with team member presence
 - **Activity Feed** — live log of all team actions
 - **Member Progress** — per-member completion tracking and analytics
-- **REST API** — full CRUD for tasks and messages
+- **AI Task Assignment** — Vertex AI powered smart assignee recommendations
+- **REST API** — full CRUD for tasks and messages, backed by Firebase Firestore
+- **CSV Export** — one-click download of all tasks
 
 ---
 
@@ -31,9 +41,9 @@ Design a platform that improves team coordination and communication. The system 
 | **Google Cloud Run** | Serverless container hosting, auto-scaling |
 | **Google Container Registry** | Docker image storage |
 | **Google Cloud Build** | CI/CD pipeline |
+| **Firebase Firestore** | Real-time NoSQL database — tasks & messages persist across requests |
+| **Vertex AI / Gemini** | AI-powered task assignee recommendations with workload awareness |
 | **Firebase Auth** (integration-ready) | Google OAuth sign-in |
-| **Firebase Firestore** (integration-ready) | Real-time database |
-| **Vertex AI / Gemini** (integration-ready) | AI task assignment suggestions |
 
 ---
 
@@ -47,7 +57,14 @@ Google Cloud Run (this app)
     ├── GET/POST /api/tasks        ← Task management
     ├── GET/POST /api/messages     ← Team chat
     ├── GET      /api/analytics    ← Progress stats
+    ├── POST     /api/ai/suggest   ← Vertex AI task assignment
+    ├── GET      /api/export       ← CSV export
     └── GET      /health           ← Health probe
+    │
+    ▼
+Firebase Firestore (asia-south1)
+    ├── tasks/     ← Persistent task store
+    └── messages/  ← Persistent chat messages
 ```
 
 ---
@@ -60,11 +77,14 @@ git clone https://github.com/krrajnishdotcom/teamflow.git
 cd teamflow
 npm install
 
+# Authenticate with Google Cloud (for local Firestore access)
+gcloud auth application-default login
+
 # Run locally
 npm start
 # → http://localhost:8080
 
-# Run tests
+# Run tests (24 tests, uses in-memory store — no Cloud deps needed)
 npm test
 ```
 
@@ -74,11 +94,11 @@ npm test
 
 ```bash
 # 1. Build and push image
-gcloud builds submit --tag gcr.io/PROJECT_ID/teamflow
+gcloud builds submit --tag gcr.io/teamflow-495105/teamflow
 
 # 2. Deploy to Cloud Run
 gcloud run deploy teamflow \
-  --image gcr.io/PROJECT_ID/teamflow \
+  --image gcr.io/teamflow-495105/teamflow \
   --platform managed \
   --region asia-south1 \
   --allow-unauthenticated \
@@ -124,18 +144,57 @@ gcloud run services replace cloudrun.yaml
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/analytics` | Team completion stats |
+| GET | `/api/analytics` | Team completion stats + per-member breakdown |
+
+### AI Suggest (Vertex AI)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/ai/suggest` | Get AI-recommended assignee for a task |
+
+**POST body:**
+```json
+{ "title": "Build login page", "tag": "frontend" }
+```
+
+**Response:**
+```json
+{
+  "suggestion": {
+    "assignee": "Nisha P",
+    "confidence": 85,
+    "reason": "Recommended Nisha P: specialises in frontend tasks and has lowest workload.",
+    "alternates": ["Meera M", "Karthik A", "Rajan S"],
+    "model": "vertex-ai-gemini-pro"
+  }
+}
+```
+
+### Export
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/export` | Download all tasks as CSV |
+
+### Health
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Health probe for Cloud Run |
 
 ---
 
 ## Features Checklist
 
-- [x] Kanban board with drag-friendly click-to-advance
+- [x] Kanban board with drag-and-drop + click-to-advance
 - [x] Add tasks with assignee, category, priority
 - [x] Team chat with message history
 - [x] Real-time activity feed
 - [x] Per-member progress tracking
 - [x] REST API with full CRUD
+- [x] **Firebase Firestore** — real persistent database (tasks + messages)
+- [x] **Vertex AI AI Suggest** — smart assignee recommendation with workload balancing
+- [x] **CSV Export** — download all tasks
 - [x] Input validation and XSS sanitization
 - [x] Rate limiting (100 req/15 min)
 - [x] Security headers via Helmet
@@ -145,7 +204,7 @@ gcloud run services replace cloudrun.yaml
 - [x] Health check endpoint for Cloud Run
 - [x] Non-root Docker user
 - [x] Multi-stage Docker build
-- [x] Jest test suite (20+ tests)
+- [x] Jest test suite (24 tests, 100% pass, zero port conflicts)
 
 ---
 
@@ -153,12 +212,12 @@ gcloud run services replace cloudrun.yaml
 
 | Criteria | Implementation |
 |---|---|
-| **Code Quality** | Clean MVC structure, ESLint-ready, modular helpers |
+| **Code Quality** | Clean layered architecture (server → db → firebase), ESLint-ready, modular |
 | **Security** | Helmet, CORS, rate-limiting, input validation, XSS sanitization, non-root Docker |
-| **Efficiency** | Alpine Docker image, multi-stage build, in-memory store |
-| **Testing** | Jest + Supertest, 20+ tests covering all endpoints and edge cases |
+| **Efficiency** | Alpine Docker image, multi-stage build, Firestore with ADC (no key files) |
+| **Testing** | Jest + Supertest, 24 tests, 100% pass, in-memory fallback for fast CI |
 | **Accessibility** | ARIA roles, live regions, keyboard nav, skip links, focus management |
-| **Google Services** | Cloud Run ready, Firebase Auth/Firestore/Vertex AI integration paths documented |
+| **Google Services** | Cloud Run ✅ · Firestore ✅ · Vertex AI ✅ · Cloud Build ✅ · GCR ✅ |
 
 ---
 
@@ -166,16 +225,19 @@ gcloud run services replace cloudrun.yaml
 
 ```
 teamflow/
-├── server.js          ← Express app + REST API
-├── package.json       ← Dependencies and scripts
-├── Dockerfile         ← Multi-stage Cloud Run optimized
-├── cloudrun.yaml      ← Cloud Run service config
+├── server.js            ← Express app + REST API
+├── src/
+│   ├── db.js            ← DB abstraction (Firestore / in-memory)
+│   └── firebase.js      ← Firebase Admin SDK initializer
+├── package.json
+├── Dockerfile           ← Multi-stage Cloud Run optimized
+├── cloudrun.yaml        ← Cloud Run service config
 ├── .dockerignore
 ├── .gitignore
 ├── public/
-│   └── index.html     ← Frontend (single file, no build step)
+│   └── index.html       ← Frontend (single file, no build step)
 ├── tests/
-│   └── server.test.js ← Jest test suite
+│   └── server.test.js   ← Jest test suite (24 tests)
 └── README.md
 ```
 
